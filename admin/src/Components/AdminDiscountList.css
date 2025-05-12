@@ -1,0 +1,115 @@
+/* AdminDiscountList.css */
+
+/* General Styles */
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .admin-header {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+  
+  .admin-subheader {
+    font-size: 1.5em;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .admin-text-red {
+    color: red;
+  }
+  
+  .admin-text-green {
+    color: green;
+  }
+  
+  /* Discount Table */
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid #ddd;
+  }
+  
+  .admin-table th {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .admin-table td {
+    background-color: #fff;
+  }
+  
+  .admin-button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .admin-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .admin-button-delete {
+    background-color: #ff5c5c;
+  }
+  
+  .admin-button-delete:hover {
+    background-color: #e04a4a;
+  }
+  
+  /* Discount Form */
+  .admin-form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+  }
+  
+  .admin-form-group {
+    margin-bottom: 15px;
+  }
+  
+  .admin-form-label {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    display: block;
+  }
+  
+  .admin-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fafafa;
+  }
+  
+  .admin-button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+  }
+  
+  .admin-button:hover {
+    background-color: #218838;
+}
+  
