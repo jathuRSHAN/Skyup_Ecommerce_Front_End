@@ -3,15 +3,34 @@ import './ListProduct.css';
 import cross_icon from '../../assets/cross_icon.png';
 
 const ListProduct = () => {
-  const [allproducts, setAllProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchInfo = async () => {
     try {
-      const res = await fetch('http://localhost:4000/allproducts');
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Token not found. Please log in.');
+
+      const res = await fetch('http://localhost:8070/items', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Status ${res.status}`);
+      }
+
       const data = await res.json();
       setAllProducts(data);
+      setError(null);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Fetch error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -19,58 +38,71 @@ const ListProduct = () => {
     fetchInfo();
   }, []);
 
-  const remove_product = async (id) => {
+  const removeProduct = async (id) => {
     try {
-      await fetch('http://localhost:4000/removeproduct', {
-        method: 'POST',
+      const token = localStorage.getItem('token');
+      if (!token) return alert('Token not found. Please log in.');
+
+      const res = await fetch(`http://localhost:8070/items/${id}`, {
+        method: 'DELETE',
         headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ id: id }),
       });
-      await fetchInfo(); // Refresh the product list after removal
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert('Product removed');
+        fetchInfo(); // Refresh list
+      } else {
+        alert(result.error || 'Failed to remove product');
+      }
     } catch (error) {
-      console.error('Error removing product:', error);
+      alert('Something went wrong');
+      console.error('Delete error:', error);
     }
   };
 
   return (
     <div className="list-product">
       <h1>All Product List</h1>
-
-      <div className="listproduct-container">
-        {/* Header row */}
-        <div className="listproduct-format-main">
-          <p>Product</p>
-          <p>Title</p>
-          <p>Old Price</p>
-          <p>New Price</p>
-          <p>Category</p>
-          <p>Remove</p>
-        </div>
-
-        {/* Product rows */}
-        {allproducts.map((product, index) => (
-          <div key={index} className="listproduct-format">
-            <img
-              src={product.image}
-              alt="product"
-              className="listproduct-product-icon"
-            />
-            <p>{product.name}</p>
-            <p>${product.old_price}</p>
-            <p>${product.new_price}</p>
-            <p>{product.category}</p>
-            <img
-              onClick={() => remove_product(product.id)} // Corrected onClick handler
-              className="listproduct-remove-icon"
-              src={cross_icon}
-              alt="remove"
-            />
+      {loading ? (
+        <p>Loading products...</p>
+      ) : error ? (
+        <p style={{ color: 'red' }}>Error: {error}</p>
+      ) : allProducts.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <div className="listproduct-container">
+          <div className="listproduct-format-main">
+            <p>Image</p>
+            <p>Name</p>
+            <p>New Price</p>
+            <p>Old Price</p>
+            <p>Category</p>
+            <p>Stock</p>
+            <p>Remove</p>
           </div>
-        ))}
-      </div>
+          {allProducts.map(product => (
+            <div key={product._id} className="listproduct-format">
+              <img src={product.image} alt="product" className="listproduct-product-icon" />
+              <p>{product.name}</p>
+              <p>${product.new_price}</p>
+              <p>${product.old_price}</p>
+              <p>{product.category || 'N/A'}</p>
+              <p>{product.stock ?? 'N/A'}</p>
+              <img
+                src={cross_icon}
+                alt="remove"
+                onClick={() => removeProduct(product._id)}
+                className="listproduct-remove-icon"
+                style={{ cursor: 'pointer' }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
