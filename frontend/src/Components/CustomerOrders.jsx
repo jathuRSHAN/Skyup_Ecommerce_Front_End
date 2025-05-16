@@ -1,32 +1,56 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './CustomerOrders.css';
 
 const CustomerOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const token = localStorage.getItem('token');
-      const userId = JSON.parse(localStorage.getItem('user'))._id;
+      try {
+        const token = localStorage.getItem('auth-token');
+        if (!token) {
+          setError('You must be logged in to view your orders.');
+          setLoading(false);
+          return;
+        }
 
-      const res = await axios.get(`/orders/customer/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        const res = await axios.get('http://localhost:8070/orders/my-orders', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      setOrders(res.data);
+        setOrders(res.data);
+      } catch (err) {
+        if (err.response && err.response.status === 401) {
+          setError('You must be logged in to view your orders.');
+        } else {
+          setError('Failed to load orders.');
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchOrders();
   }, []);
 
+  if (loading) return <p className="loading">Loading orders...</p>;
+  if (error) return <p className="error">{error}</p>;
+  if (orders.length === 0) return <p className="no-orders">You have no orders.</p>;
+
   return (
-    <div>
+    <div className="orders-container">
       <h2>Your Orders</h2>
       {orders.map(order => (
-        <div key={order._id}>
-          <h4>Order ID: {order._id}</h4>
-          <p>Status: {order.status}</p>
-          <p>Total: Rs. {order.lastAmount}</p>
+        <div className="order-card" key={order._id}>
+          <h4>🧾 Order ID: {order._id}</h4>
+          <p>Status: <strong>{order.status}</strong></p>
+          <p>Total: Rs. <strong>{order.lastAmount}</strong></p>
+          <p>Payment: {order.paymentStatus}</p>
+          <p>Ordered On: {new Date(order.createdAt).toLocaleString()}</p>
+          <hr />
         </div>
       ))}
     </div>
