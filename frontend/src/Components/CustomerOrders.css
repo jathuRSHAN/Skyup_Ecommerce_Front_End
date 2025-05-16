@@ -1,0 +1,64 @@
+.orders-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.orders-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #222;
+}
+
+.order-card {
+  background-color: #fff;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  transition: box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.order-card h4 {
+  margin: 0 0 0.6rem 0;
+  font-weight: 600;
+  color: #0070f3;
+}
+
+.order-card p {
+  margin: 0.3rem 0;
+  font-size: 0.95rem;
+}
+
+.order-card hr {
+  margin-top: 1rem;
+  border: none;
+  border-top: 1px solid #eee;
+}
+
+.loading,
+.error,
+.no-orders {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-top: 3rem;
+  color: #555;
+}
+
+.error {
+  color: #e63946;
+}
+
+.no-orders {
+  color: #6c757d;
+}
