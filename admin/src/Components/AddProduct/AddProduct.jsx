@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './AddProduct.css';
 import upload_area from '../../assets/upload_area.svg';
+import Notification from '../Notification/Notification'; 
 
 const AddProduct = () => {
   const [image, setImage] = useState(null);
@@ -11,6 +12,13 @@ const AddProduct = () => {
     category: '',
     stock: ''
   });
+
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
+  const showNotification = (message, type) => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
+  };
 
   const imageHandler = (e) => {
     const file = e.target.files[0];
@@ -29,7 +37,7 @@ const AddProduct = () => {
     const { name, old_price, new_price, category, stock } = productDetails;
 
     if (!name || !old_price || !new_price || !category || !stock || !image) {
-      alert('Please fill all fields and upload an image.');
+      showNotification('Please fill all fields and upload an image.', 'error');
       return;
     }
 
@@ -55,7 +63,7 @@ const AddProduct = () => {
       const result = await productResponse.json();
 
       if (productResponse.ok) {
-        alert('Product Added Successfully!');
+        showNotification('Product Added Successfully!', 'success');
         setProductDetails({
           name: '',
           old_price: '',
@@ -66,16 +74,24 @@ const AddProduct = () => {
         setImage(null);
       } else {
         console.error('Product response error:', result);
-        alert(result.error || 'Failed to add product');
+        showNotification(result.error || 'Failed to add product', 'error');
       }
     } catch (error) {
       console.error('Caught error while adding product:', error);
-      alert('Something went wrong while adding the product.');
+      showNotification('Something went wrong while adding the product.', 'error');
     }
   };
 
   return (
     <div className="add-product">
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ show: false, message: '', type: '' })}
+        />
+      )}
+
       <div className="addproduct-itemfield">
         <p>Product Name</p>
         <input name="name" type="text" value={productDetails.name} onChange={changeHandler} />
