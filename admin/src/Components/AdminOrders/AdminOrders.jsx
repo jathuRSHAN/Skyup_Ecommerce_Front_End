@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Notification from '../Notification/Notification';  
 import './AdminOrders.css';
 
 const AdminOrders = () => {
@@ -7,6 +8,9 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusOptions] = useState(["New", "Processing", "Done", "Cancelled"]);
+
+  
+  const [notification, setNotification] = useState({ message: '', type: '' });
 
   const token = localStorage.getItem('token');
 
@@ -38,11 +42,11 @@ const AdminOrders = () => {
       await axios.put(`http://localhost:8070/orders/cancel/${orderId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Order cancelled.");
+      setNotification({ message: 'Order cancelled.', type: 'success' });
       setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'Cancelled', paymentStatus: 'Cancelled' } : o));
     } catch (err) {
       console.error("Error cancelling order:", err);
-      alert("Failed to cancel order.");
+      setNotification({ message: 'Failed to cancel order.', type: 'error' });
     }
   };
 
@@ -51,12 +55,16 @@ const AdminOrders = () => {
       await axios.put(`http://localhost:8070/orders/${orderId}/status`, { status }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Status updated.");
+      setNotification({ message: 'Status updated.', type: 'success' });
       setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status } : o));
     } catch (err) {
       console.error("Error updating status:", err);
-      alert("Failed to update status.");
+      setNotification({ message: 'Failed to update status.', type: 'error' });
     }
+  };
+
+  const closeNotification = () => {
+    setNotification({ message: '', type: '' });
   };
 
   if (!token) return <div style={{ color: 'red' }}>No auth token found</div>;
@@ -66,6 +74,14 @@ const AdminOrders = () => {
   return (
     <div className="admin-orders-container">
       <h2>All Customer Orders</h2>
+
+      {/* Notification popup */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={closeNotification}
+      />
+
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
