@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './NewCollections.css';
+import ProductDisplay from '../ProductDisplay/ProductDisplay'; 
 
 const NewCollections = () => {
   const [newCollection, setNewCollection] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null); 
 
   useEffect(() => {
     fetch('http://localhost:8070/items/newcollection')
@@ -26,6 +28,20 @@ const NewCollections = () => {
       });
   }, []);
 
+  const handleBackToList = () => {
+    setSelectedProduct(null);
+  };
+
+ 
+  if (selectedProduct) {
+    return (
+      <div className="new-collections">
+        <button onClick={handleBackToList} className="back-button">← Back to Products</button>
+        <ProductDisplay product={selectedProduct} />
+      </div>
+    );
+  }
+
   return (
     <div className="new-collections">
       <h1>JUST ARRIVED</h1>
@@ -35,7 +51,12 @@ const NewCollections = () => {
       ) : (
         <div className="collections">
           {newCollection.map((item, index) => (
-            <div className="product-card" key={index}>
+            <div
+              className="product-card"
+              key={index}
+              onClick={() => setSelectedProduct(item)} 
+              style={{ cursor: 'pointer' }}
+            >
               <img src={item.image} alt={item.name} />
               <h3>{item.name}</h3>
               <div className="price-container">
