@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './ListProduct.css';
 import cross_icon from '../../assets/cross_icon.png';
+import Notification from '../Notification/Notification'; 
 
 const ListProduct = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null); 
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+  };
 
   const fetchInfo = async () => {
     try {
@@ -41,7 +46,7 @@ const ListProduct = () => {
   const removeProduct = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return alert('Token not found. Please log in.');
+      if (!token) return showNotification('Token not found. Please log in.', 'error');
 
       const res = await fetch(`http://localhost:8070/items/${id}`, {
         method: 'DELETE',
@@ -53,13 +58,13 @@ const ListProduct = () => {
       const result = await res.json();
 
       if (res.ok) {
-        alert('Product removed');
-        fetchInfo(); // Refresh list
+        showNotification('Product removed successfully', 'success');
+        fetchInfo(); 
       } else {
-        alert(result.error || 'Failed to remove product');
+        showNotification(result.error || 'Failed to remove product', 'error');
       }
     } catch (error) {
-      alert('Something went wrong');
+      showNotification('Something went wrong', 'error');
       console.error('Delete error:', error);
     }
   };
@@ -67,6 +72,13 @@ const ListProduct = () => {
   return (
     <div className="list-product">
       <h1>All Product List</h1>
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {loading ? (
         <p>Loading products...</p>
       ) : error ? (
