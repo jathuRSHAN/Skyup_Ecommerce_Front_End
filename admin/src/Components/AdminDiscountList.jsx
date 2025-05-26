@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchDiscounts, deleteDiscount, createDiscount } from '../discountAPI';
-import './AdminDiscountList.css';  
+import Notification from './Notification/Notification'; 
+import './AdminDiscountList.css';
 
 const AdminDiscountList = ({ token }) => {
   const [discounts, setDiscounts] = useState([]);
@@ -11,19 +12,21 @@ const AdminDiscountList = ({ token }) => {
     value: '',
     minPurchase: '',
     maxDiscount: '',
-    applicableItems: [],
-    applicable_SubCategories: [],
-    applicableCategories: [],
+    applicableItems: '',
+    applicable_SubCategories: '',
+    applicableCategories: '',
     startDate: '',
     endDate: '',
     isActive: true,
     usageLimit: ''
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, discountId: null });
 
   useEffect(() => {
-    // Get user info from localStorage or context
     const storedUser = JSON.parse(localStorage.getItem('user'));
     setUser(storedUser);
   }, []);
@@ -32,26 +35,55 @@ const AdminDiscountList = ({ token }) => {
     if (user && user.role === 'Admin') {
       fetchDiscounts(token)
         .then(res => setDiscounts(res.data))
-        .catch(err => console.error(err));
+        .catch(() => {
+          setNotification({ message: 'Failed to fetch discounts', type: 'error' });
+          setShowNotification(true);
+        });
     }
   }, [token, user]);
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this discount?')) {
-      deleteDiscount(id, token)
-        .then(() => setDiscounts(prev => prev.filter(d => d._id !== id)))
-        .catch(err => alert(err.response?.data?.error || 'Error deleting discount'));
-    }
+  const openDeleteConfirm = (id) => {
+    setDeleteConfirm({ show: true, discountId: id });
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, discountId: null });
+  };
+
+  const confirmDelete = () => {
+    const id = deleteConfirm.discountId;
+    deleteDiscount(id, token)
+      .then(() => {
+        setDiscounts(prev => prev.filter(d => d._id !== id));
+        setNotification({ message: 'Discount deleted successfully.', type: 'success' });
+        setShowNotification(true);
+      })
+      .catch(err => {
+        const msg = err.response?.data?.error || 'Error deleting discount';
+        setNotification({ message: msg, type: 'error' });
+        setShowNotification(true);
+      })
+      .finally(() => {
+        setDeleteConfirm({ show: false, discountId: null });
+      });
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setNotification({ message: '', type: '' });
+    setShowNotification(false);
 
-    // Validate form input
     if (!formData.code || !formData.value || !formData.startDate || !formData.endDate) {
-      setError("Please fill in all required fields.");
+      setNotification({ message: 'Please fill in all required fields.', type: 'error' });
+      setShowNotification(true);
       return;
     }
 
@@ -62,9 +94,9 @@ const AdminDiscountList = ({ token }) => {
         value: Number(formData.value),
         minPurchase: formData.minPurchase ? Number(formData.minPurchase) : 0,
         maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : 0,
-        applicableItems: formData.applicableItems,
-        applicable_SubCategories: formData.applicable_SubCategories,
-        applicableCategories: formData.applicableCategories,
+        applicableItems: formData.applicableItems ? formData.applicableItems.split(',').map(s => s.trim()) : [],
+        applicable_SubCategories: formData.applicable_SubCategories ? formData.applicable_SubCategories.split(',').map(s => s.trim()) : [],
+        applicableCategories: formData.applicableCategories ? formData.applicableCategories.split(',').map(s => s.trim()) : [],
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString(),
         isActive: formData.isActive,
@@ -72,31 +104,32 @@ const AdminDiscountList = ({ token }) => {
       };
 
       const newDiscount = await createDiscount(dataToSend, token);
-      setDiscounts(prev => [...prev, newDiscount.data]); 
+      setDiscounts(prev => [...prev, newDiscount.data]);
 
-      // Reset form fields after successful creation
       setFormData({
         code: '',
         type: 'percentage',
         value: '',
         minPurchase: '',
         maxDiscount: '',
-        applicableItems: [],
-        applicable_SubCategories: [],
-        applicableCategories: [],
+        applicableItems: '',
+        applicable_SubCategories: '',
+        applicableCategories: '',
         startDate: '',
         endDate: '',
         isActive: true,
         usageLimit: ''
       });
-      setSuccess('Discount created successfully.');
+
+      setNotification({ message: 'Discount created successfully.', type: 'success' });
+      setShowNotification(true);
     } catch (err) {
       const msg = err.response?.data?.error || 'Error creating discount';
-      setError(msg);
+      setNotification({ message: msg, type: 'error' });
+      setShowNotification(true);
     }
   };
 
-  // Role-based access control
   if (!user) return <div className="admin-text-red">Loading...</div>;
   if (user.role !== 'Admin') return <div className="admin-text-red">Access Denied</div>;
 
@@ -104,140 +137,171 @@ const AdminDiscountList = ({ token }) => {
     <div className="admin-container">
       <h2 className="admin-header">All Discounts</h2>
 
-      {/* Success and error messages */}
-      {success && <div className="admin-success-message">{success}</div>}
-      {error && <div className="admin-error-message">{error}</div>}
+      {showNotification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setShowNotification(false)}
+        />
+      )}
 
-      {/* Discount creation form */}
+      {deleteConfirm.show && (
+        <div className="admin-confirm-overlay">
+          <div className="admin-confirm-box">
+            <p>Are you sure you want to delete this discount?</p>
+            <div className="admin-confirm-buttons">
+              <button className="admin-button admin-button-cancel" onClick={cancelDelete}>
+                Cancel
+              </button>
+              <button className="admin-button admin-button-delete" onClick={confirmDelete}>
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h3 className="admin-subheader">Create a new Discount</h3>
       <form className="admin-form" onSubmit={handleCreate}>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Code</label>
-          <input 
-            type="text" 
-            value={formData.code} 
-            onChange={e => setFormData({ ...formData, code: e.target.value })} 
-            required 
-            className="admin-input"
+        <label>
+          Code*:
+          <input
+            type="text"
+            name="code"
+            value={formData.code}
+            onChange={handleChange}
+            required
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Type</label>
-          <select 
-            value={formData.type} 
-            onChange={e => setFormData({ ...formData, type: e.target.value })}
-            className="admin-input"
+        </label>
+
+        <label>
+          Type*:
+          <select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
           >
             <option value="percentage">Percentage</option>
             <option value="fixed">Fixed Amount</option>
           </select>
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Value</label>
-          <input 
-            type="number" 
-            value={formData.value} 
-            onChange={e => setFormData({ ...formData, value: e.target.value })} 
-            required 
-            className="admin-input"
+        </label>
+
+        <label>
+          Value*:
+          <input
+            type="number"
+            name="value"
+            value={formData.value}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
+            required
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Min Purchase</label>
-          <input 
-            type="number" 
-            value={formData.minPurchase} 
-            onChange={e => setFormData({ ...formData, minPurchase: e.target.value })} 
-            className="admin-input"
+        </label>
+
+        <label>
+          Minimum Purchase:
+          <input
+            type="number"
+            name="minPurchase"
+            value={formData.minPurchase}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Max Discount</label>
-          <input 
-            type="number" 
-            value={formData.maxDiscount} 
-            onChange={e => setFormData({ ...formData, maxDiscount: e.target.value })} 
-            className="admin-input"
+        </label>
+
+        <label>
+          Maximum Discount:
+          <input
+            type="number"
+            name="maxDiscount"
+            value={formData.maxDiscount}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Applicable Items (IDs)</label>
-          <input 
-            type="text" 
-            value={formData.applicableItems.join(', ')} 
-            onChange={e => setFormData({ 
-              ...formData, 
-              applicableItems: e.target.value.split(',').map(id => id.trim()) 
-            })} 
-            className="admin-input"
+        </label>
+
+        <label>
+          Applicable Items (comma separated):
+          <input
+            type="text"
+            name="applicableItems"
+            value={formData.applicableItems}
+            onChange={handleChange}
+            placeholder="item1, item2, item3"
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Applicable Subcategories (IDs)</label>
-          <input 
-            type="text" 
-            value={formData.applicable_SubCategories.join(', ')} 
-            onChange={e => setFormData({ 
-              ...formData, 
-              applicable_SubCategories: e.target.value.split(',').map(id => id.trim()) 
-            })} 
-            className="admin-input"
+        </label>
+
+        <label>
+          Applicable SubCategories (comma separated):
+          <input
+            type="text"
+            name="applicable_SubCategories"
+            value={formData.applicable_SubCategories}
+            onChange={handleChange}
+            placeholder="subcategory1, subcategory2"
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Applicable Categories (IDs)</label>
-          <input 
-            type="text" 
-            value={formData.applicableCategories.join(', ')} 
-            onChange={e => setFormData({ 
-              ...formData, 
-              applicableCategories: e.target.value.split(',').map(id => id.trim()) 
-            })} 
-            className="admin-input"
+        </label>
+
+        <label>
+          Applicable Categories (comma separated):
+          <input
+            type="text"
+            name="applicableCategories"
+            value={formData.applicableCategories}
+            onChange={handleChange}
+            placeholder="category1, category2"
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Start Date</label>
-          <input 
-            type="date" 
-            value={formData.startDate} 
-            onChange={e => setFormData({ ...formData, startDate: e.target.value })} 
-            required 
-            className="admin-input"
+        </label>
+
+        <label>
+          Start Date*:
+          <input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            required
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">End Date</label>
-          <input 
-            type="date" 
-            value={formData.endDate} 
-            onChange={e => setFormData({ ...formData, endDate: e.target.value })} 
-            required 
-            className="admin-input"
+        </label>
+
+        <label>
+          End Date*:
+          <input
+            type="date"
+            name="endDate"
+            value={formData.endDate}
+            onChange={handleChange}
+            required
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Active</label>
-          <input 
-            type="checkbox" 
-            checked={formData.isActive} 
-            onChange={e => setFormData({ ...formData, isActive: e.target.checked })} 
-            className="admin-input"
+        </label>
+
+        <label>
+          Active:
+          <input
+            type="checkbox"
+            name="isActive"
+            checked={formData.isActive}
+            onChange={handleChange}
           />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Usage Limit</label>
-          <input 
-            type="number" 
-            value={formData.usageLimit} 
-            onChange={e => setFormData({ ...formData, usageLimit: e.target.value })} 
-            className="admin-input"
+        </label>
+
+        <label>
+          Usage Limit:
+          <input
+            type="number"
+            name="usageLimit"
+            value={formData.usageLimit}
+            onChange={handleChange}
+            min="0"
           />
-        </div>
+        </label>
+
         <button type="submit" className="admin-button">Create Discount</button>
       </form>
 
-      {/* Display discount list */}
       <table className="admin-table">
         <thead>
           <tr>
@@ -260,8 +324,8 @@ const AdminDiscountList = ({ token }) => {
               <td>{new Date(discount.endDate).toLocaleDateString()}</td>
               <td>{discount.isActive ? 'Yes' : 'No'}</td>
               <td>
-                <button 
-                  onClick={() => handleDelete(discount._id)} 
+                <button
+                  onClick={() => openDeleteConfirm(discount._id)}
                   className="admin-button admin-button-delete"
                 >
                   Delete
