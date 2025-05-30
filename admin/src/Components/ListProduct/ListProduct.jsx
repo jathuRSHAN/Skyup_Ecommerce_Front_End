@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import './ListProduct.css';
 import cross_icon from '../../assets/cross_icon.png';
-import Notification from '../Notification/Notification'; 
+import Notification from '../Notification/Notification';
 
 const ListProduct = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [notification, setNotification] = useState(null); 
+  const [notification, setNotification] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    new_price: '',
+    old_price: '',
+    category: '',
+    stock: '',
+  });
+
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
   };
@@ -59,13 +68,50 @@ const ListProduct = () => {
 
       if (res.ok) {
         showNotification('Product removed successfully', 'success');
-        fetchInfo(); 
+        fetchInfo();
       } else {
         showNotification(result.error || 'Failed to remove product', 'error');
       }
     } catch (error) {
       showNotification('Something went wrong', 'error');
       console.error('Delete error:', error);
+    }
+  };
+
+  const handleEditClick = (product) => {
+    setEditingProduct(product);
+    setEditForm({
+      name: product.name,
+      new_price: product.new_price,
+      old_price: product.old_price,
+      category: product.category || '',
+      stock: product.stock ?? '',
+    });
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8070/items/${editingProduct._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (res.ok) {
+        showNotification('Product updated successfully');
+        setEditingProduct(null);
+        fetchInfo();
+      } else {
+        const data = await res.json();
+        showNotification(data.error || 'Update failed', 'error');
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      showNotification('Something went wrong while updating', 'error');
     }
   };
 
@@ -95,6 +141,7 @@ const ListProduct = () => {
             <p>Category</p>
             <p>Stock</p>
             <p>Remove</p>
+            <p>Edit</p>
           </div>
           {allProducts.map(product => (
             <div key={product._id} className="listproduct-format">
@@ -109,10 +156,48 @@ const ListProduct = () => {
                 alt="remove"
                 onClick={() => removeProduct(product._id)}
                 className="listproduct-remove-icon"
-                style={{ cursor: 'pointer' }}
               />
+              <button className="listproduct-edit-button" onClick={() => handleEditClick(product)}>Edit</button>
             </div>
           ))}
+        </div>
+      )}
+
+      {editingProduct && (
+        <div className="edit-product-form">
+          <h3>Edit Product: {editingProduct.name}</h3>
+          <input
+            type="text"
+            placeholder="Name"
+            value={editForm.name}
+            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+          />
+          <input
+            type="number"
+            placeholder="New Price"
+            value={editForm.new_price}
+            onChange={(e) => setEditForm({ ...editForm, new_price: e.target.value })}
+          />
+          <input
+            type="number"
+            placeholder="Old Price"
+            value={editForm.old_price}
+            onChange={(e) => setEditForm({ ...editForm, old_price: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Category"
+            value={editForm.category}
+            onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+          />
+          <input
+            type="number"
+            placeholder="Stock"
+            value={editForm.stock}
+            onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+          />
+          <button onClick={handleUpdate}>Save</button>
+          <button onClick={() => setEditingProduct(null)}>Cancel</button>
         </div>
       )}
     </div>
