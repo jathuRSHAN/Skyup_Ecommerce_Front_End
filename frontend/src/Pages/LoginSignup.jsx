@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './CSS/LoginSignup.css';
+import Notification from '../Components/Notification/Notification'; 
 
 const LoginSignup = () => {
   const [state, setState] = useState("Sign Up");
@@ -23,6 +24,16 @@ const LoginSignup = () => {
     newPassword: ''
   });
   const [agreeTerms, setAgreeTerms] = useState(false);
+
+  // ✅ Notification state
+  const [notifMsg, setNotifMsg] = useState('');
+  const [notifType, setNotifType] = useState('success');
+
+  const showNotification = (message, type = 'success') => {
+    setNotifMsg(message);
+    setNotifType(type);
+    setTimeout(() => setNotifMsg(''), 2000);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,14 +66,14 @@ const LoginSignup = () => {
         await axios.put('http://localhost:8070/users/change-password', passwordData, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        alert('Password changed successfully!');
+        showNotification('Password changed successfully!', 'success');
         setState('Login');
       } catch (error) {
-        alert(error.response?.data?.error || "Error changing password.");
+        showNotification(error.response?.data?.error || "Error changing password.", 'error');
       }
     } else {
       if (!agreeTerms) {
-        alert('You must agree to the terms and conditions.');
+        showNotification('You must agree to the terms and conditions.', 'error');
         return;
       }
 
@@ -79,10 +90,11 @@ const LoginSignup = () => {
         }
 
         const response = await axios.post(url, payload);
-        localStorage.setItem('auth-token', response.data.token);  // Save token to localStorage
-        window.location.replace("/");  // Redirect to home page after successful login/signup
+        localStorage.setItem('auth-token', response.data.token);
+        showNotification(`${state} successful!`, 'success');
+        setTimeout(() => window.location.replace("/"), 1500);
       } catch (error) {
-        alert(error.response?.data?.error || "An error occurred.");
+        showNotification(error.response?.data?.error || "An error occurred.", 'error');
       }
     }
   };
@@ -91,6 +103,10 @@ const LoginSignup = () => {
     <div className="loginsignup">
       <div className="loginsignup-container">
         <h1>{state}</h1>
+
+        {/* ✅ Notification display */}
+        {notifMsg && <Notification message={notifMsg} type={notifType} />}
+
         <form onSubmit={handleSubmit} className="loginsignup-fields">
           {state === "Sign Up" && (
             <>
