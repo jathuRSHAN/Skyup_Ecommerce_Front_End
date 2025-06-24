@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './CSS/LoginSignup.css';
-import Notification from '../Components/Notification/Notification'; 
+import Notification from '../Components/Notification/Notification';
 
 const LoginSignup = () => {
   const [state, setState] = useState("Sign Up");
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    userType: 'Customer',
+    userType: 'Customer', // hardcoded
     address: {
       state: '',
       city: '',
@@ -19,13 +20,14 @@ const LoginSignup = () => {
     phone: '',
     preferredPaymentMethod: ''
   });
+
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: ''
   });
+
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // ✅ Notification state
   const [notifMsg, setNotifMsg] = useState('');
   const [notifType, setNotifType] = useState('success');
 
@@ -84,11 +86,6 @@ const LoginSignup = () => {
 
         const payload = { ...formData };
 
-        // Remove preferredPaymentMethod if not a Customer
-        if (formData.userType !== 'Customer') {
-          delete payload.preferredPaymentMethod;
-        }
-
         const response = await axios.post(url, payload);
         localStorage.setItem('auth-token', response.data.token);
         showNotification(`${state} successful!`, 'success');
@@ -104,7 +101,6 @@ const LoginSignup = () => {
       <div className="loginsignup-container">
         <h1>{state}</h1>
 
-        {/* ✅ Notification display */}
         {notifMsg && <Notification message={notifMsg} type={notifType} />}
 
         <form onSubmit={handleSubmit} className="loginsignup-fields">
@@ -112,19 +108,13 @@ const LoginSignup = () => {
             <>
               <input name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
               <input name="phone" placeholder="Phone (start with 0)" value={formData.phone} onChange={handleChange} required />
-              <select name="userType" value={formData.userType} onChange={handleChange}>
-                <option value="Customer">Customer</option>
-                <option value="Admin">Admin</option>
-              </select>
-              {formData.userType === 'Customer' && (
-                <input
-                  name="preferredPaymentMethod"
-                  placeholder="Preferred Payment Method"
-                  value={formData.preferredPaymentMethod}
-                  onChange={handleChange}
-                  required
-                />
-              )}
+              <input
+                name="preferredPaymentMethod"
+                placeholder="Preferred Payment Method"
+                value={formData.preferredPaymentMethod}
+                onChange={handleChange}
+                required
+              />
               <input name="address.state" placeholder="State" value={formData.address.state} onChange={handleChange} required />
               <input name="address.city" placeholder="City" value={formData.address.city} onChange={handleChange} required />
               <input name="address.street" placeholder="Street" value={formData.address.street} onChange={handleChange} required />
