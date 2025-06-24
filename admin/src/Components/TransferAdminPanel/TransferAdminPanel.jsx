@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Notification from '../Notification/Notification'; 
+import Notification from '../Notification/Notification';
 
 const TransferAdminPanel = () => {
   const [users, setUsers] = useState([]);
@@ -9,8 +9,6 @@ const TransferAdminPanel = () => {
 
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
-
-  const [confirmTransfer, setConfirmTransfer] = useState({ show: false, userId: null });
 
   const token = localStorage.getItem('token');
 
@@ -49,7 +47,7 @@ const TransferAdminPanel = () => {
     fetchUsers();
   }, [token]);
 
-  const handleTransfer = async (userId) => {
+  const handlePromoteToAdmin = async (userId) => {
     try {
       const res = await fetch(`/api/transfer-admin/${userId}`, {
         method: 'PUT',
@@ -63,26 +61,32 @@ const TransferAdminPanel = () => {
       if (res.ok) {
         setNotification({ message: data.message, type: 'success' });
         setShowNotification(true);
-        setTimeout(() => window.location.reload(), 2000);
+        setTimeout(() => {
+          setShowNotification(false);
+          setTimeout(() => window.location.reload(), 500);
+        }, 2500);
       } else {
         setNotification({ message: data.error || 'Transfer failed', type: 'error' });
         setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 2500);
       }
     } catch (error) {
       console.error('Error transferring admin rights:', error);
       setNotification({ message: 'Error transferring admin rights', type: 'error' });
       setShowNotification(true);
-    } finally {
-      setConfirmTransfer({ show: false, userId: null });
+      setTimeout(() => setShowNotification(false), 2500);
     }
   };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
+  const adminUsers = users.filter((u) => u.userType === 'Admin');
+  const customerUsers = users.filter((u) => u.userType !== 'Admin');
+
   return (
     <div className="transfer-admin-panel" style={{ padding: '20px' }}>
-      <h2>Transfer Admin Rights</h2>
+      <h2>Manage User Roles</h2>
 
       {showNotification && (
         <Notification
@@ -92,52 +96,60 @@ const TransferAdminPanel = () => {
         />
       )}
 
-      {confirmTransfer.show && (
-        <div className="admin-confirm-overlay">
-          <div className="admin-confirm-box">
-            <p>Are you sure you want to transfer admin rights? You will be demoted.</p>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <button
-                onClick={() => setConfirmTransfer({ show: false, userId: null })}
-                style={{ padding: '6px 12px' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleTransfer(confirmTransfer.userId)}
-                style={{ padding: '6px 12px', backgroundColor: 'red', color: '#fff' }}
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <table border="1" cellPadding="8">
+      {/* Admin Users Table */}
+      <h3>Admin Users</h3>
+      <table border="1" cellPadding="8" style={{ width: '100%', marginBottom: '30px' }}>
         <thead>
           <tr>
             <th>Name</th>
             <th>Email</th>
-            <th>User Type</th>
-            <th>Action</th>
+            <th>Current Role</th>
           </tr>
         </thead>
         <tbody>
-          {users
-            .filter((u) => u._id !== currentUserId && u.userType !== 'Admin')
-            .map((user) => (
-              <tr key={user._id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.userType}</td>
-                <td>
-                  <button onClick={() => setConfirmTransfer({ show: true, userId: user._id })}>
-                    Transfer Admin
-                  </button>
-                </td>
-              </tr>
-            ))}
+          {adminUsers.map((user) => (
+            <tr
+              key={user._id}
+              style={{
+                backgroundColor: user._id === currentUserId ? '#e7f3ff' : 'transparent',
+                fontWeight: user._id === currentUserId ? 'bold' : 'normal',
+              }}
+            >
+              <td>{user.name}</td>
+              <td>{user.email}</td>
+              <td>{user.userType}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Customer Users Table */}
+      <h3>Customer Users</h3>
+      <table border="1" cellPadding="8" style={{ width: '100%' }}>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Current Role</th>
+            <th>Promote</th>
+          </tr>
+        </thead>
+        <tbody>
+          {customerUsers.map((user) => (
+            <tr key={user._id}>
+              <td>{user.name}</td>
+              <td>{user.email}</td>
+              <td>{user.userType}</td>
+              <td>
+                <button
+                  onClick={() => handlePromoteToAdmin(user._id)}
+                  disabled={user.userType === 'Admin'}
+                >
+                  Make Admin
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
