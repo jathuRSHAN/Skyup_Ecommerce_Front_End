@@ -25,3 +25,31 @@
         width:60px;
     }
 }
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-logout-button {
+  padding: 8px 16px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.nav-logout-button:hover {
+  background-color: #c0392b;
+}
+
+@media (max-width: 800px) {
+  .nav-logout-button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+}
