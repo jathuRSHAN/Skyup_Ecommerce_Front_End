@@ -85,6 +85,15 @@
     color: #dc3545; /* Red for old price */
     text-decoration: line-through;
 }
+.back-button {
+  background-color: #eee;
+  border: none;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+}
 
 @media (max-width: 768px) {
     .collections {

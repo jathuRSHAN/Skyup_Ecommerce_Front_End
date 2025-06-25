@@ -45,3 +45,16 @@
 .back-link:hover {
   background-color: #0056b3;
 }
+.orders-link {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 16px;
+  margin-left: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.orders-link:hover {
+  background-color: #45a049;
+}

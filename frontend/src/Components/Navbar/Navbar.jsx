@@ -9,6 +9,8 @@ const Navbar = () => {
   const [menu, setMenu] = useState("shop");
   const { getTotalCartItems, saveCartBeforeLogout } = useContext(ShopContext);
 
+  const isLoggedIn = !!localStorage.getItem('auth-token');
+
   const handleLogout = async () => {
     try {
       await saveCartBeforeLogout();
@@ -26,6 +28,7 @@ const Navbar = () => {
         <img src={logo} alt="logo" />
         <p>EliteCell</p>
       </div>
+
       <ul className="nav-menu">
         <li onClick={() => setMenu("shop")}>
           <Link style={{ textDecoration: 'none' }} to='/'>Shop</Link>
@@ -43,9 +46,17 @@ const Navbar = () => {
           <Link style={{ textDecoration: 'none' }} to='/budget'>Budget</Link>
           {menu === "budget" ? <hr /> : null}
         </li>
+
+        {isLoggedIn && (
+          <li onClick={() => setMenu("my-orders")}>
+            <Link style={{ textDecoration: 'none' }} to='/orders'>My Orders</Link>
+            {menu === "my-orders" ? <hr /> : null}
+          </li>
+        )}
       </ul>
+
       <div className="nav-login-cart">
-        {localStorage.getItem('auth-token') ? (
+        {isLoggedIn ? (
           <button onClick={handleLogout}>Logout</button>
         ) : (
           <Link to="/login"><button>Login</button></Link>

@@ -1,8 +1,13 @@
+// OrderForm.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './OrderForm.css'; 
+import { useLocation } from 'react-router-dom';
+import './OrderForm.css';
 
 const OrderForm = () => {
+  const location = useLocation();
+  const directProduct = location.state?.product || null;
+
   const [cartItems, setCartItems] = useState([]);
   const [address, setAddress] = useState({
     street: '',
@@ -13,40 +18,48 @@ const OrderForm = () => {
   const [paymentMethod, setPaymentMethod] = useState('Credit Card');
   const [cardNumber, setCardNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState('');
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState(''); // 'success' or 'error'
 
   useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    setCartItems(cart);
-  }, []);
+    if (!directProduct) {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      setCartItems(cart);
+    }
+  }, [directProduct]);
+
+  const showCustomNotification = (message, type = 'success') => {
+    setNotification(message);
+    setNotificationType(type);
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 3000);
+  };
 
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem('auth-token');
 
     if (!token) {
-      alert('You must be logged in to place an order.');
-      return;
-    }
-
-    if (cartItems.length === 0) {
-      alert('Your cart is empty.');
+      showCustomNotification('You must be logged in to place an order.', 'error');
       return;
     }
 
     const { street, city, state, postalCode } = address;
     if (!street || !city || !state || !postalCode) {
-      alert('Please fill out the complete shipping address.');
+      showCustomNotification('Please fill out the complete shipping address.', 'error');
       return;
     }
 
     if (!cardNumber || cardNumber.length < 12) {
-      alert('Please enter a valid card number.');
+      showCustomNotification('Please enter a valid card number.', 'error');
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const orderItems = Array.isArray(cartItems)
+    const orderItems = directProduct
+      ? [{ itemId: directProduct._id, quantity: 1 }]
+      : Array.isArray(cartItems)
         ? cartItems.map(item => ({
             itemId: item.itemId,
             quantity: item.quantity,
@@ -56,6 +69,13 @@ const OrderForm = () => {
             quantity,
           }));
 
+    if (orderItems.length === 0) {
+      showCustomNotification('No items to order.', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
       const res = await axios.post(
         'http://localhost:8070/orders',
         {
@@ -63,21 +83,24 @@ const OrderForm = () => {
           discount: 10,
           shippingAddress: address,
           paymentMethod,
-          paymentDetails: {
-            cardNumber,
-          },
+          paymentDetails: { cardNumber },
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      localStorage.removeItem('cart');
-      alert('Order placed!');
-      window.location.href = `/payments/success?order_id=${res.data.order._id}`;
+      if (!directProduct) {
+        localStorage.removeItem('cart');
+      }
+
+      showCustomNotification('✅ Order placed successfully!');
+      setTimeout(() => {
+        window.location.href = `/payments/success?order_id=${res.data.order._id}`;
+      }, 1500);
     } catch (err) {
       console.error('Error placing order:', err.response?.data || err.message);
-      alert(`Error placing order: ${err.response?.data?.message || 'Unknown error'}`);
+      showCustomNotification(`Error placing order: ${err.response?.data?.message || 'Unknown error'}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -85,6 +108,12 @@ const OrderForm = () => {
 
   return (
     <div className="order-form-container">
+      {showNotification && (
+        <div className={`custom-notification ${notificationType}`}>
+          {notification}
+        </div>
+      )}
+
       <h2>Shipping Address</h2>
       <input
         placeholder="Street"

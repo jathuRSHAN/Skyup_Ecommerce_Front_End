@@ -24,6 +24,7 @@ import budget_banner from './Components/Assets/banner_budget.png';
 
 import ShopContextProvider, { ShopContext } from './Context/ShopContext';
 
+
 function AppRoutes() {
   const { userToken, customerId, cartItems } = useContext(ShopContext);
 
@@ -42,6 +43,7 @@ function AppRoutes() {
       <Route path='/orders' element={<CustomerOrders />} />
       <Route path='/admin/orders' element={<AdminOrders />} />
       <Route path='/order/:id' element={<OrderDetails />} />
+      <Route path="/order-now" element={<OrderForm/>} />
 
       {/* ✅ Payment outcomes */}
       <Route path='/payments/success' element={<Success />} />

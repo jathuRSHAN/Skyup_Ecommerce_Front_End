@@ -43,16 +43,28 @@ const CustomerOrders = () => {
   return (
     <div className="orders-container">
       <h2>Your Orders</h2>
-      {orders.map(order => (
-        <div className="order-card" key={order._id}>
-          <h4>🧾 Order ID: {order._id}</h4>
-          <p>Status: <strong>{order.status}</strong></p>
-          <p>Total: Rs. <strong>{order.lastAmount}</strong></p>
-          <p>Payment: {order.paymentStatus}</p>
-          <p>Ordered On: {new Date(order.createdAt).toLocaleString()}</p>
-          <hr />
-        </div>
-      ))}
+      <table className="orders-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Status</th>
+            <th>Total (Rs.)</th>
+            <th>Status</th>
+            <th>Ordered On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map(order => (
+            <tr key={order._id}>
+              <td>{order._id}</td>
+              <td>{order.status}</td>
+              <td>{order.lastAmount}</td>
+              <td>{order.paymentStatus}</td>
+              <td>{new Date(order.createdAt).toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

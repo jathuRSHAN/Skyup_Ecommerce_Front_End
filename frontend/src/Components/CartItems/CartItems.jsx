@@ -16,6 +16,14 @@ const CartItems = () => {
 
   const totalAmount = getTotalCartAmount();
 
+  // Create an array of selected products with quantity > 0
+  const selectedProducts = all_product
+    .filter((p) => cartItems[p.id] > 0)
+    .map((p) => ({
+      ...p,
+      quantity: cartItems[p.id],
+    }));
+
   return (
     <div className="cartitems">
       <div className="cartitems-format-main">
@@ -27,38 +35,33 @@ const CartItems = () => {
         <p>Remove</p>
       </div>
       <hr />
-      {all_product.map((e) => {
-        if (cartItems[e.id] > 0) {
-          return (
-            <div key={e.id}>
-              <div className="cartitems-format">
-                <img src={e.image} alt="" className="carticon-product-icon" />
-                <p>{e.name}</p>
-                <p>LKR{e.new_price}</p>
-                <input
-                  type="number"
-                  min="0"
-                  className="cartitems-quantity-input"
-                  value={cartItems[e.id]}
-                  onChange={(event) => {
-                    const value = parseInt(event.target.value) || 0;
-                    updateCartItem(e.id, value);
-                  }}
-                />
-                <p>LKR{(e.new_price * cartItems[e.id]).toFixed(2)}</p>
-                <img
-                  src={remove_icon}
-                  onClick={() => removeFromCart(e.id)}
-                  alt="Remove"
-                  className="cartitems-remove-icon"
-                />
-              </div>
-              <hr />
-            </div>
-          );
-        }
-        return null;
-      })}
+      {selectedProducts.map((e) => (
+        <div key={e.id}>
+          <div className="cartitems-format">
+            <img src={e.image} alt="" className="carticon-product-icon" />
+            <p>{e.name}</p>
+            <p>LKR{e.new_price}</p>
+            <input
+              type="number"
+              min="0"
+              className="cartitems-quantity-input"
+              value={e.quantity}
+              onChange={(event) => {
+                const value = parseInt(event.target.value) || 0;
+                updateCartItem(e.id, value);
+              }}
+            />
+            <p>LKR{(e.new_price * e.quantity).toFixed(2)}</p>
+            <img
+              src={remove_icon}
+              onClick={() => removeFromCart(e.id)}
+              alt="Remove"
+              className="cartitems-remove-icon"
+            />
+          </div>
+          <hr />
+        </div>
+      ))}
 
       <div className="cartitems-down">
         <div className="cartitems-total">
@@ -79,7 +82,14 @@ const CartItems = () => {
               <h3>LKR{totalAmount.toFixed(2)}</h3>
             </div>
           </div>
-          <button className="proceed-button" onClick={() => navigate('/order/new')}>
+          <button
+            className="proceed-button"
+            onClick={() =>
+              selectedProducts.length > 0
+                ? navigate('/order-now', { state: { products: selectedProducts } })
+                : alert('No product selected.')
+            }
+          >
             PROCEED TO CHECKOUT
           </button>
         </div>

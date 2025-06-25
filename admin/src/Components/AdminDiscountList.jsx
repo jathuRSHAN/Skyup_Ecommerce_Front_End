@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { fetchDiscounts, deleteDiscount, createDiscount } from '../discountAPI';
-import './AdminDiscountList.css';  
+import {
+  fetchDiscounts, deleteDiscount, createDiscount,
+  fetchCategories, fetchSubCategories, fetchItems
+} from '../discountAPI';
+import Notification from './Notification/Notification';
+import './AdminDiscountList.css';
 
 const AdminDiscountList = ({ token }) => {
   const [discounts, setDiscounts] = useState([]);
   const [user, setUser] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
+  const [items, setItems] = useState([]);
+
   const [formData, setFormData] = useState({
     code: '',
     type: 'percentage',
@@ -19,11 +27,12 @@ const AdminDiscountList = ({ token }) => {
     isActive: true,
     usageLimit: ''
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, discountId: null });
 
   useEffect(() => {
-    // Get user info from localStorage or context
     const storedUser = JSON.parse(localStorage.getItem('user'));
     setUser(storedUser);
   }, []);
@@ -32,49 +41,52 @@ const AdminDiscountList = ({ token }) => {
     if (user && user.role === 'Admin') {
       fetchDiscounts(token)
         .then(res => setDiscounts(res.data))
-        .catch(err => console.error(err));
+        .catch(() => {
+          setNotification({ message: 'Failed to fetch discounts', type: 'error' });
+          setShowNotification(true);
+        });
+
+      fetchCategories(token).then(res => setCategories(res.data)).catch(() => {});
+      fetchSubCategories(token).then(res => setSubCategories(res.data)).catch(() => {});
+      fetchItems(token).then(res => setItems(res.data)).catch(() => {});
     }
   }, [token, user]);
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this discount?')) {
-      deleteDiscount(id, token)
-        .then(() => setDiscounts(prev => prev.filter(d => d._id !== id)))
-        .catch(err => alert(err.response?.data?.error || 'Error deleting discount'));
+  const handleChange = (e) => {
+    const { name, value, type, checked, multiple, options } = e.target;
+    if (multiple) {
+      const selected = Array.from(options).filter(opt => opt.selected).map(opt => opt.value);
+      setFormData(prev => ({ ...prev, [name]: selected }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     }
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setNotification({ message: '', type: '' });
+    setShowNotification(false);
 
-    // Validate form input
     if (!formData.code || !formData.value || !formData.startDate || !formData.endDate) {
-      setError("Please fill in all required fields.");
+      setNotification({ message: 'Please fill in all required fields.', type: 'error' });
+      setShowNotification(true);
       return;
     }
 
     try {
       const dataToSend = {
-        code: formData.code,
-        type: formData.type,
+        ...formData,
         value: Number(formData.value),
         minPurchase: formData.minPurchase ? Number(formData.minPurchase) : 0,
         maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : 0,
-        applicableItems: formData.applicableItems,
-        applicable_SubCategories: formData.applicable_SubCategories,
-        applicableCategories: formData.applicableCategories,
+        usageLimit: formData.usageLimit ? Number(formData.usageLimit) : 0,
         startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString(),
-        isActive: formData.isActive,
-        usageLimit: formData.usageLimit ? Number(formData.usageLimit) : 0
+        endDate: new Date(formData.endDate).toISOString()
       };
 
       const newDiscount = await createDiscount(dataToSend, token);
-      setDiscounts(prev => [...prev, newDiscount.data]); 
+      setDiscounts(prev => [...prev, newDiscount.data]);
 
-      // Reset form fields after successful creation
       setFormData({
         code: '',
         type: 'percentage',
@@ -89,14 +101,16 @@ const AdminDiscountList = ({ token }) => {
         isActive: true,
         usageLimit: ''
       });
-      setSuccess('Discount created successfully.');
+
+      setNotification({ message: 'Discount created successfully.', type: 'success' });
+      setShowNotification(true);
     } catch (err) {
       const msg = err.response?.data?.error || 'Error creating discount';
-      setError(msg);
+      setNotification({ message: msg, type: 'error' });
+      setShowNotification(true);
     }
   };
 
-  // Role-based access control
   if (!user) return <div className="admin-text-red">Loading...</div>;
   if (user.role !== 'Admin') return <div className="admin-text-red">Access Denied</div>;
 
@@ -104,140 +118,123 @@ const AdminDiscountList = ({ token }) => {
     <div className="admin-container">
       <h2 className="admin-header">All Discounts</h2>
 
-      {/* Success and error messages */}
-      {success && <div className="admin-success-message">{success}</div>}
-      {error && <div className="admin-error-message">{error}</div>}
+      {showNotification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setShowNotification(false)}
+        />
+      )}
 
-      {/* Discount creation form */}
+      {deleteConfirm.show && (
+        <div className="admin-confirm-overlay">
+          <div className="admin-confirm-box">
+            <p>Are you sure you want to delete this discount?</p>
+            <div className="admin-confirm-buttons">
+              <button className="admin-button admin-button-cancel" onClick={() => setDeleteConfirm({ show: false, discountId: null })}>
+                Cancel
+              </button>
+              <button className="admin-button admin-button-delete" onClick={() => {
+                deleteDiscount(deleteConfirm.discountId, token)
+                  .then(() => {
+                    setDiscounts(prev => prev.filter(d => d._id !== deleteConfirm.discountId));
+                    setNotification({ message: 'Discount deleted successfully.', type: 'success' });
+                    setShowNotification(true);
+                  })
+                  .catch(err => {
+                    const msg = err.response?.data?.error || 'Error deleting discount';
+                    setNotification({ message: msg, type: 'error' });
+                    setShowNotification(true);
+                  })
+                  .finally(() => setDeleteConfirm({ show: false, discountId: null }));
+              }}>
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h3 className="admin-subheader">Create a new Discount</h3>
       <form className="admin-form" onSubmit={handleCreate}>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Code</label>
-          <input 
-            type="text" 
-            value={formData.code} 
-            onChange={e => setFormData({ ...formData, code: e.target.value })} 
-            required 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Type</label>
-          <select 
-            value={formData.type} 
-            onChange={e => setFormData({ ...formData, type: e.target.value })}
-            className="admin-input"
-          >
+        <label>
+          Code:
+          <input type="text" name="code" value={formData.code} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Type:
+          <select name="type" value={formData.type} onChange={handleChange}>
             <option value="percentage">Percentage</option>
-            <option value="fixed">Fixed Amount</option>
+            <option value="flat">Flat</option>
           </select>
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Value</label>
-          <input 
-            type="number" 
-            value={formData.value} 
-            onChange={e => setFormData({ ...formData, value: e.target.value })} 
-            required 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Min Purchase</label>
-          <input 
-            type="number" 
-            value={formData.minPurchase} 
-            onChange={e => setFormData({ ...formData, minPurchase: e.target.value })} 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Max Discount</label>
-          <input 
-            type="number" 
-            value={formData.maxDiscount} 
-            onChange={e => setFormData({ ...formData, maxDiscount: e.target.value })} 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Applicable Items (IDs)</label>
-          <input 
-            type="text" 
-            value={formData.applicableItems.join(', ')} 
-            onChange={e => setFormData({ 
-              ...formData, 
-              applicableItems: e.target.value.split(',').map(id => id.trim()) 
-            })} 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Applicable Subcategories (IDs)</label>
-          <input 
-            type="text" 
-            value={formData.applicable_SubCategories.join(', ')} 
-            onChange={e => setFormData({ 
-              ...formData, 
-              applicable_SubCategories: e.target.value.split(',').map(id => id.trim()) 
-            })} 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Applicable Categories (IDs)</label>
-          <input 
-            type="text" 
-            value={formData.applicableCategories.join(', ')} 
-            onChange={e => setFormData({ 
-              ...formData, 
-              applicableCategories: e.target.value.split(',').map(id => id.trim()) 
-            })} 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Start Date</label>
-          <input 
-            type="date" 
-            value={formData.startDate} 
-            onChange={e => setFormData({ ...formData, startDate: e.target.value })} 
-            required 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">End Date</label>
-          <input 
-            type="date" 
-            value={formData.endDate} 
-            onChange={e => setFormData({ ...formData, endDate: e.target.value })} 
-            required 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Active</label>
-          <input 
-            type="checkbox" 
-            checked={formData.isActive} 
-            onChange={e => setFormData({ ...formData, isActive: e.target.checked })} 
-            className="admin-input"
-          />
-        </div>
-        <div className="admin-form-group">
-          <label className="admin-form-label">Usage Limit</label>
-          <input 
-            type="number" 
-            value={formData.usageLimit} 
-            onChange={e => setFormData({ ...formData, usageLimit: e.target.value })} 
-            className="admin-input"
-          />
-        </div>
+        </label>
+
+        <label>
+          Value:
+          <input type="number" name="value" value={formData.value} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Min Purchase:
+          <input type="number" name="minPurchase" value={formData.minPurchase} onChange={handleChange} />
+        </label>
+
+        <label>
+          Max Discount:
+          <input type="number" name="maxDiscount" value={formData.maxDiscount} onChange={handleChange} />
+        </label>
+
+        <label>
+          Usage Limit:
+          <input type="number" name="usageLimit" value={formData.usageLimit} onChange={handleChange} />
+        </label>
+
+        <label>
+          Start Date:
+          <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} required />
+        </label>
+
+        <label>
+          End Date:
+          <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} required />
+        </label>
+
+        <label>
+          Is Active:
+          <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} />
+        </label>
+
+        <label>
+          Applicable Items:
+          <select name="applicableItems" value={formData.applicableItems} onChange={handleChange} multiple>
+            {items.map(item => (
+              <option key={item._id} value={item._id}>{item.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Applicable SubCategories:
+          <select name="applicable_SubCategories" value={formData.applicable_SubCategories} onChange={handleChange} multiple>
+            {subCategories.map(sub => (
+              <option key={sub._id} value={sub._id}>{sub.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          Applicable Categories:
+          <select name="applicableCategories" value={formData.applicableCategories} onChange={handleChange} multiple>
+            {categories.map(cat => (
+              <option key={cat._id} value={cat._id}>{cat.name}</option>
+            ))}
+          </select>
+        </label>
+
         <button type="submit" className="admin-button">Create Discount</button>
       </form>
 
-      {/* Display discount list */}
       <table className="admin-table">
         <thead>
           <tr>
@@ -260,8 +257,8 @@ const AdminDiscountList = ({ token }) => {
               <td>{new Date(discount.endDate).toLocaleDateString()}</td>
               <td>{discount.isActive ? 'Yes' : 'No'}</td>
               <td>
-                <button 
-                  onClick={() => handleDelete(discount._id)} 
+                <button
+                  onClick={() => setDeleteConfirm({ show: true, discountId: discount._id })}
                   className="admin-button admin-button-delete"
                 >
                   Delete
