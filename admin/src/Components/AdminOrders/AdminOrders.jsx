@@ -41,9 +41,9 @@ const AdminOrders = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotification({ message: 'Order cancelled.', type: 'success' });
-
-      // Remove cancelled order from state to make it disappear
-      setOrders(prev => prev.filter(order => order._id !== orderId));
+      setOrders(prev => prev.map(order =>
+        order._id === orderId ? { ...order, status: 'Cancelled', paymentStatus: 'Cancelled' } : order
+      ));
     } catch (err) {
       console.error("Error cancelling order:", err);
       setNotification({ message: 'Failed to cancel order.', type: 'error' });
@@ -70,7 +70,7 @@ const AdminOrders = () => {
   const formatAddress = (shippingAddress) => {
     if (!shippingAddress) return 'N/A';
     const { street, city, state, postalCode } = shippingAddress;
-    return `${street}, ${city}, ${state}, ${postalCode}`;
+    return `${street}, ${city}, ${state} ${postalCode}`;
   };
 
   if (!token) return <div style={{ color: 'red' }}>No auth token found</div>;
@@ -97,6 +97,7 @@ const AdminOrders = () => {
                 <th>Order ID</th>
                 <th>Customer Name</th>
                 <th>Address</th>
+                <th>Items</th>
                 <th>Status</th>
                 <th>Payment</th>
                 <th>Total</th>
@@ -110,6 +111,32 @@ const AdminOrders = () => {
                   <td>{order._id}</td>
                   <td>{order.customerId?.userId?.name || 'N/A'}</td>
                   <td>{formatAddress(order.shippingAddress)}</td>
+
+                  <td>
+                    {order.order_items && order.order_items.length > 0 ? (
+                      <table className="nested-items-table">
+                        <thead>
+                          <tr>
+                            <th style={{ textAlign: 'left' }}>Product</th>
+                            <th>Qty</th>
+                            <th>Rs.</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {order.order_items.map((item, index) => (
+                            <tr key={index}>
+                              <td>{item.name || 'Unnamed Item'}</td>
+                              <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                              <td style={{ textAlign: 'right' }}>{item.unitPrice}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      'No items'
+                    )}
+                  </td>
+
                   <td>{order.status}</td>
                   <td>{order.paymentStatus}</td>
                   <td>Rs. {order.lastAmount}</td>
