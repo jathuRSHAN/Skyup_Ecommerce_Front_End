@@ -10,7 +10,7 @@ const Success = () => {
   return (
     <div className="success-container">
       <div className="success-card">
-        <h1 className="success-title">✅ Payment Successful</h1>
+        <h1 className="success-title">✅ Order Successful</h1>
         <p className="success-message">Thank you for your order!</p>
         {orderId && (
           <p className="order-id">
