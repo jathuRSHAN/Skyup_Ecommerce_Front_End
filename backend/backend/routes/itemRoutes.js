@@ -156,4 +156,18 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// ✅ Get latest 4 items for a given category
+router.get('/related/:category', async (req, res) => {
+  try {
+    const category = req.params.category;
+    const items = await Item.find({ category })
+      .sort({ _id: -1 })
+      .limit(4);
+    res.status(200).send(items);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+
 module.exports = router;
