@@ -58,3 +58,39 @@
 .orders-link:hover {
   background-color: #45a049;
 }
+/* Style for the button group container */
+.button-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* Base button style */
+.btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Return to Shop button */
+.back-btn {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.back-btn:hover {
+  background-color: #217dbb;
+}
+
+/* View My Orders button */
+.orders-btn {
+  background-color: #27ae60;
+  color: #fff;
+}
+
+.orders-btn:hover {
+  background-color: #1e874b;
+}
