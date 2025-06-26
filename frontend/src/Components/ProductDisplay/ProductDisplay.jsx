@@ -21,7 +21,7 @@ const ProductDisplay = (props) => {
   };
 
   const handleBuyNow = () => {
-    navigate('/order-now', { state: { product } }); // Pass product via state
+    navigate('/order-now', { state: { product } });
   };
 
   return (
@@ -71,9 +71,14 @@ const ProductDisplay = (props) => {
         </div>
         <button onClick={handleAddToCart}>ADD TO CART</button>
         <button onClick={handleBuyNow} className="buy-now-button">BUY NOW</button>
+
         <p className='productdisplay-right-category'>
-          <span>Category :</span> Smartphones, Gaming Phones, Phablets, Budget Phones
+          <span>Category :</span>{' '}
+          {Array.isArray(product.category)
+            ? product.category.join(', ')
+            : product.category || 'Uncategorized'}
         </p>
+
         <p className='productdisplay-right-category'>
           <span>Tags :</span> Modern, Latest, Limited Edition
         </p>
