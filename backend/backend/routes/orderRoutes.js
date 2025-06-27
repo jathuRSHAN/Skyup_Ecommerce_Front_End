@@ -27,19 +27,26 @@ router.get('/', authenticateToken, authorizeRole("Admin"), async (req, res) => {
   }
 });
 
+
 // Get orders of the logged-in customer
 router.get('/my-orders', authenticateToken, async (req, res) => {
   try {
-    const customer = await Customer.findOne({ userId: req.user.id }).exec();
+    const customer = await Customer.findOne({ userId: req.user.id });
 
     if (!customer) {
       return res.status(404).json({ error: 'Customer profile not found' });
     }
 
     const orders = await Order.find({ customerId: customer._id })
+      .populate({
+        path: 'customerId',
+        populate: {
+          path: 'userId',
+          select: 'name', 
+        },
+      })
       .populate('order_items.itemId', 'name new_price')
-      .sort({ createdAt: -1 })
-      .exec();
+      .sort({ createdAt: -1 });
 
     res.status(200).json(orders);
   } catch (error) {
@@ -47,6 +54,7 @@ router.get('/my-orders', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
+
 
 // Get orders for a specific customer
 router.get('/customer/:customerId', authenticateToken, async (req, res) => {
