@@ -14,7 +14,8 @@ const Product = () => {
     return <div>Loading product...</div>;
   }
 
-  const product = all_product.find((e) => e.id === productId);
+
+  const product = all_product.find((e) => e._id === productId || e.id === productId);
 
   if (!product) {
     return <div>Product not found.</div>;
@@ -25,7 +26,7 @@ const Product = () => {
       <Breadcrum product={product} />
       <ProductDisplay product={product} />
       <DescriptionBox />
-      <RelatedProducts />
+      <RelatedProducts currentProduct={product} />
     </div>
   );
 };

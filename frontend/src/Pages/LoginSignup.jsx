@@ -10,15 +10,14 @@ const LoginSignup = () => {
     name: '',
     email: '',
     password: '',
-    userType: 'Customer', // hardcoded
+    userType: 'Customer',
     address: {
       state: '',
       city: '',
       street: '',
       zip: ''
     },
-    phone: '',
-    preferredPaymentMethod: ''
+    phone: ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -27,7 +26,6 @@ const LoginSignup = () => {
   });
 
   const [agreeTerms, setAgreeTerms] = useState(false);
-
   const [notifMsg, setNotifMsg] = useState('');
   const [notifType, setNotifType] = useState('success');
 
@@ -108,13 +106,6 @@ const LoginSignup = () => {
             <>
               <input name="name" placeholder="Name" value={formData.name} onChange={handleChange} required />
               <input name="phone" placeholder="Phone (start with 0)" value={formData.phone} onChange={handleChange} required />
-              <input
-                name="preferredPaymentMethod"
-                placeholder="Preferred Payment Method"
-                value={formData.preferredPaymentMethod}
-                onChange={handleChange}
-                required
-              />
               <input name="address.state" placeholder="State" value={formData.address.state} onChange={handleChange} required />
               <input name="address.city" placeholder="City" value={formData.address.city} onChange={handleChange} required />
               <input name="address.street" placeholder="Street" value={formData.address.street} onChange={handleChange} required />
