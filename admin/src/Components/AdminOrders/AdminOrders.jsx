@@ -3,6 +3,10 @@ import axios from 'axios';
 import Notification from '../Notification/Notification';
 import './AdminOrders.css';
 
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
+import logo from '../../assets/logo.png';
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +77,125 @@ const AdminOrders = () => {
     return `${street}, ${city}, ${state} ${postalCode}`;
   };
 
+  // PDF generation function
+  const generatePDF = (order, forPrint = false) => {
+    const doc = new jsPDF();
+
+    // Add logo
+    const imgProps = doc.getImageProperties(logo);
+    const pdfWidth = doc.internal.pageSize.getWidth();
+    const imgWidth = 40;
+    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+    const imgX = (pdfWidth - imgWidth) / 2;
+    doc.addImage(logo, 'PNG', imgX, 10, imgWidth, imgHeight);
+
+   
+    doc.setTextColor('#EB1E21');
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EliteCell', pdfWidth / 2, 10 + imgHeight + 12, { align: 'center' });
+
+    // Outline rectangle
+    const margin = 10;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.5);
+    doc.rect(margin, margin, pageWidth - margin * 2, pageHeight - margin * 2);
+
+    // Reset color & font for body text
+    doc.setTextColor(0);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+
+    let startY = 10 + imgHeight + 20;
+
+    doc.text(`Order ID: ${order._id}`, margin + 4, startY);
+    startY += 8;
+
+    doc.text(`Customer Name: ${order.customerId?.userId?.name || 'N/A'}`, margin + 4, startY);
+    startY += 8;
+
+    doc.text(`Payment Status: ${order.paymentStatus}`, margin + 4, startY);
+    startY += 8;
+
+    doc.text(`Order Status: ${order.status}`, margin + 4, startY);
+    startY += 8;
+
+    const orderDate = new Date(order.createdAt).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+    doc.text(`Order Date: ${orderDate}`, margin + 4, startY);
+    startY += 8;
+
+    const { street, city, state, postalCode } = order.shippingAddress || {};
+    const shippingAddressText = street && city && state && postalCode
+      ? `${street}, ${city}, ${state} ${postalCode}`
+      : 'N/A';
+
+    doc.text(`Shipping: ${shippingAddressText}`, margin + 4, startY);
+    startY += 10;
+
+    // Table of items
+    const tableColumn = ["Product", "Quantity", "Unit Price (Rs.)"];
+    const tableRows = [];
+
+    if (order.order_items && order.order_items.length > 0) {
+      order.order_items.forEach(item => {
+        tableRows.push([
+          item.name || 'Unnamed Item',
+          item.quantity.toString(),
+          item.unitPrice.toFixed(2),
+        ]);
+      });
+    }
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: startY,
+      theme: 'grid',
+      styles: {
+        cellPadding: 3,
+        fontSize: 11,
+        valign: 'middle',
+        overflow: 'linebreak',
+      },
+      headStyles: {
+        fillColor: '#5a9ecb',
+        textColor: 255,
+        halign: 'center',
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      },
+      margin: { left: margin, right: margin }
+    });
+
+    const finalY = doc.lastAutoTable.finalY || startY + 40;
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total: Rs. ${order.lastAmount.toFixed(2)}`, pageWidth - margin - 60, finalY + 10);
+
+    if (forPrint) {
+      // Open PDF in new tab and trigger print
+      const string = doc.output('bloburl');
+      const x = window.open(string);
+      x.onload = function () {
+        x.focus();
+        x.print();
+      };
+    } else {
+      doc.save(`Order_${order._id}.pdf`);
+    }
+  };
+
   if (!token) return <div style={{ color: 'red' }}>No auth token found</div>;
   if (loading) return <div>Loading orders...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
@@ -102,7 +225,7 @@ const AdminOrders = () => {
                 <th>Payment</th>
                 <th>Total</th>
                 <th>Change Status</th>
-                <th>Action</th>
+                <th>Actions</th> {/* Adjusted header */}
               </tr>
             </thead>
             <tbody>
@@ -140,6 +263,7 @@ const AdminOrders = () => {
                   <td>{order.status}</td>
                   <td>{order.paymentStatus}</td>
                   <td>Rs. {order.lastAmount}</td>
+
                   <td>
                     <select
                       value={order.status}
@@ -150,12 +274,23 @@ const AdminOrders = () => {
                       ))}
                     </select>
                   </td>
+
                   <td>
                     <button
                       onClick={() => handleCancel(order._id)}
                       disabled={order.status === "Cancelled"}
                     >
                       Cancel
+                    </button>{' '}
+                    <button
+                      onClick={() => generatePDF(order)}
+                    >
+                      Download Receipt
+                    </button>{' '}
+                    <button
+                      onClick={() => generatePDF(order, true)}
+                    >
+                      Print Receipt
                     </button>
                   </td>
                 </tr>
