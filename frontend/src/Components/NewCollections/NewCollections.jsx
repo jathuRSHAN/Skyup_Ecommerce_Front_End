@@ -39,7 +39,7 @@ const NewCollections = () => {
       <div className="new-collections">
         <button onClick={handleBackToList} className="back-button">← Back to Products</button>
         <ProductDisplay product={selectedProduct} />
-        <RelatedProducts /> {/* 🔹 Add this below the ProductDisplay */}
+        
       </div>
     );
   }
@@ -59,7 +59,7 @@ const NewCollections = () => {
               onClick={() => setSelectedProduct(item)} 
               style={{ cursor: 'pointer' }}
             >
-              <img src={item.image} alt={item.name} />
+              <img src={item.image[0]} alt={item.name} />
               <h3>{item.name}</h3>
               <div className="price-container">
                 <span className="new-price">LKR{item.new_price}</span>
