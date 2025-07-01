@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import axios from 'axios';
-import logo from '../Components/Assets/logo.png'; 
+import logo from '../Components/Assets/logo.png';
 import './Success.css';
 
 const Success = () => {
@@ -51,7 +51,6 @@ const Success = () => {
     }
   }, [orderId, token]);
 
-  
   const formatDateTime = (dateString) => {
     if (!dateString) return 'N/A';
     const options = {
@@ -65,24 +64,19 @@ const Success = () => {
     if (!order) return;
 
     const doc = new jsPDF();
-
     const img = new Image();
     img.src = logo;
 
     img.onload = () => {
-    
       doc.setLineWidth(0.5);
-      doc.rect(10, 10, 190, 277); 
+      doc.rect(10, 10, 190, 277);
 
-    
       doc.addImage(img, 'PNG', 14, 14, 30, 15);
 
-   
       doc.setTextColor('#EB1E21');
       doc.setFontSize(18);
       doc.text('EliteCell', 50, 24);
 
-      
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
 
@@ -113,7 +107,14 @@ const Success = () => {
 
       const finalY = doc.lastAutoTable.finalY || 100;
       doc.setFontSize(12);
-      doc.text(`Total Amount: Rs ${order.totalAmount}`, 14, finalY + 10);
+      doc.text(`Total Amount: Rs ${order.totalAmount.toFixed(2)}`, 14, finalY + 10);
+
+      if (order.discount && order.discount > 0) {
+        doc.text(`Discount: -Rs ${order.discount.toFixed(2)}`, 14, finalY + 18);
+        doc.text(`Final Amount to Pay: Rs ${order.lastAmount.toFixed(2)}`, 14, finalY + 26);
+      } else {
+        doc.text(`Final Amount to Pay: Rs ${order.lastAmount.toFixed(2)}`, 14, finalY + 18);
+      }
 
       doc.save(`Receipt_${order._id}.pdf`);
     };
@@ -133,6 +134,15 @@ const Success = () => {
 
         {loading && <p>Loading order details...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        {/* Show order summary on UI */}
+        {order && (
+          <div className="summary-display">
+            <p>Total Amount: Rs {order.totalAmount.toFixed(2)}</p>
+            {order.discount > 0 && <p>Discount Applied: -Rs {order.discount.toFixed(2)}</p>}
+            <p><strong>Final Amount: Rs {order.lastAmount.toFixed(2)}</strong></p>
+          </div>
+        )}
 
         <div className="button-group">
           <button className="btn back-btn" onClick={() => navigate('/')}>
