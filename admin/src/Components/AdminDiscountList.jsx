@@ -53,12 +53,22 @@ const AdminDiscountList = ({ token }) => {
   }, [token, user]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked, multiple, options } = e.target;
+    const { name, value, type, checked, options, multiple } = e.target;
+
     if (multiple) {
-      const selected = Array.from(options).filter(opt => opt.selected).map(opt => opt.value);
-      setFormData(prev => ({ ...prev, [name]: selected }));
+      const selectedValues = Array.from(options)
+        .filter(option => option.selected)
+        .map(option => option.value);
+
+      setFormData(prev => ({
+        ...prev,
+        [name]: selectedValues
+      }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
     }
   };
 
@@ -131,23 +141,29 @@ const AdminDiscountList = ({ token }) => {
           <div className="admin-confirm-box">
             <p>Are you sure you want to delete this discount?</p>
             <div className="admin-confirm-buttons">
-              <button className="admin-button admin-button-cancel" onClick={() => setDeleteConfirm({ show: false, discountId: null })}>
+              <button
+                className="admin-button admin-button-cancel"
+                onClick={() => setDeleteConfirm({ show: false, discountId: null })}
+              >
                 Cancel
               </button>
-              <button className="admin-button admin-button-delete" onClick={() => {
-                deleteDiscount(deleteConfirm.discountId, token)
-                  .then(() => {
-                    setDiscounts(prev => prev.filter(d => d._id !== deleteConfirm.discountId));
-                    setNotification({ message: 'Discount deleted successfully.', type: 'success' });
-                    setShowNotification(true);
-                  })
-                  .catch(err => {
-                    const msg = err.response?.data?.error || 'Error deleting discount';
-                    setNotification({ message: msg, type: 'error' });
-                    setShowNotification(true);
-                  })
-                  .finally(() => setDeleteConfirm({ show: false, discountId: null }));
-              }}>
+              <button
+                className="admin-button admin-button-delete"
+                onClick={() => {
+                  deleteDiscount(deleteConfirm.discountId, token)
+                    .then(() => {
+                      setDiscounts(prev => prev.filter(d => d._id !== deleteConfirm.discountId));
+                      setNotification({ message: 'Discount deleted successfully.', type: 'success' });
+                      setShowNotification(true);
+                    })
+                    .catch(err => {
+                      const msg = err.response?.data?.error || 'Error deleting discount';
+                      setNotification({ message: msg, type: 'error' });
+                      setShowNotification(true);
+                    })
+                    .finally(() => setDeleteConfirm({ show: false, discountId: null }));
+                }}
+              >
                 Confirm
               </button>
             </div>
@@ -166,7 +182,8 @@ const AdminDiscountList = ({ token }) => {
           Type:
           <select name="type" value={formData.type} onChange={handleChange}>
             <option value="percentage">Percentage</option>
-            <option value="flat">Flat</option>
+            <option value="fixed">Fixed</option>
+            <option value="bogo">BOGO</option>
           </select>
         </label>
 
@@ -212,6 +229,7 @@ const AdminDiscountList = ({ token }) => {
               <option key={item._id} value={item._id}>{item.name}</option>
             ))}
           </select>
+          <small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple</small>
         </label>
 
         <label>
@@ -221,6 +239,7 @@ const AdminDiscountList = ({ token }) => {
               <option key={sub._id} value={sub._id}>{sub.name}</option>
             ))}
           </select>
+          <small>Hold Ctrl or Cmd to select multiple</small>
         </label>
 
         <label>
@@ -230,6 +249,7 @@ const AdminDiscountList = ({ token }) => {
               <option key={cat._id} value={cat._id}>{cat.name}</option>
             ))}
           </select>
+          <small>Hold Ctrl or Cmd to select multiple</small>
         </label>
 
         <button type="submit" className="admin-button">Create Discount</button>
