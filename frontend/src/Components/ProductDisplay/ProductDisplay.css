@@ -7,15 +7,25 @@
     gap:17px;
 
 }
-.productdisplay-img-list{
+.productdisplay-img-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
-.productdisplay-img-list img{
-   
-    height: 145px;
-    
+
+
+.productdisplay-img-list img {
+    width: 100px;
+    height: 156px; 
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.productdisplay-img-list img:hover {
+    box-shadow: 0 0 8px rgba(0,0,0,0.12);
 }
 .productdisplay-main-img{
     width: 586px;
