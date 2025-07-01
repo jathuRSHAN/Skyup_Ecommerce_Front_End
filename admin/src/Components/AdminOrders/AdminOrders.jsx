@@ -77,11 +77,9 @@ const AdminOrders = () => {
     return `${street}, ${city}, ${state} ${postalCode}`;
   };
 
-  // PDF generation function
   const generatePDF = (order, forPrint = false) => {
     const doc = new jsPDF();
 
-    // Add logo
     const imgProps = doc.getImageProperties(logo);
     const pdfWidth = doc.internal.pageSize.getWidth();
     const imgWidth = 40;
@@ -89,21 +87,17 @@ const AdminOrders = () => {
     const imgX = (pdfWidth - imgWidth) / 2;
     doc.addImage(logo, 'PNG', imgX, 10, imgWidth, imgHeight);
 
-   
     doc.setTextColor('#EB1E21');
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.text('EliteCell', pdfWidth / 2, 10 + imgHeight + 12, { align: 'center' });
 
-    // Outline rectangle
     const margin = 10;
     const pageHeight = doc.internal.pageSize.getHeight();
-    const pageWidth = doc.internal.pageSize.getWidth();
     doc.setDrawColor(0);
     doc.setLineWidth(0.5);
-    doc.rect(margin, margin, pageWidth - margin * 2, pageHeight - margin * 2);
+    doc.rect(margin, margin, pdfWidth - margin * 2, pageHeight - margin * 2);
 
-    // Reset color & font for body text
     doc.setTextColor(0);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
@@ -123,71 +117,57 @@ const AdminOrders = () => {
     startY += 8;
 
     const orderDate = new Date(order.createdAt).toLocaleString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
     });
     doc.text(`Order Date: ${orderDate}`, margin + 4, startY);
     startY += 8;
 
-    const { street, city, state, postalCode } = order.shippingAddress || {};
-    const shippingAddressText = street && city && state && postalCode
-      ? `${street}, ${city}, ${state} ${postalCode}`
+    const shipping = order.shippingAddress;
+    const shippingAddressText = shipping
+      ? `${shipping.street}, ${shipping.city}, ${shipping.state} ${shipping.postalCode}`
       : 'N/A';
-
     doc.text(`Shipping: ${shippingAddressText}`, margin + 4, startY);
     startY += 10;
 
-    // Table of items
     const tableColumn = ["Product", "Quantity", "Unit Price (Rs.)"];
-    const tableRows = [];
-
-    if (order.order_items && order.order_items.length > 0) {
-      order.order_items.forEach(item => {
-        tableRows.push([
-          item.name || 'Unnamed Item',
-          item.quantity.toString(),
-          item.unitPrice.toFixed(2),
-        ]);
-      });
-    }
+    const tableRows = order.order_items?.map(item => [
+      item.name || 'Unnamed Item',
+      item.quantity.toString(),
+      item.unitPrice.toFixed(2),
+    ]) || [];
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: startY,
       theme: 'grid',
-      styles: {
-        cellPadding: 3,
-        fontSize: 11,
-        valign: 'middle',
-        overflow: 'linebreak',
-      },
-      headStyles: {
-        fillColor: '#5a9ecb',
-        textColor: 255,
-        halign: 'center',
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240]
-      },
+      styles: { cellPadding: 3, fontSize: 11 },
+      headStyles: { fillColor: '#5a9ecb', textColor: 255, halign: 'center' },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
       margin: { left: margin, right: margin }
     });
 
     const finalY = doc.lastAutoTable.finalY || startY + 40;
 
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Total: Rs. ${order.lastAmount.toFixed(2)}`, pageWidth - margin - 60, finalY + 10);
+
+    let summaryY = finalY + 10;
+    doc.text(`Subtotal: Rs. ${order.totalAmount?.toFixed(2)}`, pdfWidth - margin - 60, summaryY);
+
+    if (order.discount && order.discount > 0) {
+      summaryY += 8;
+      doc.text(`Discount: -Rs. ${order.discount?.toFixed(2)}`, pdfWidth - margin - 60, summaryY);
+    }
+
+    summaryY += 8;
+    doc.text(`Total: Rs. ${order.lastAmount?.toFixed(2)}`, pdfWidth - margin - 60, summaryY);
 
     if (forPrint) {
-      // Open PDF in new tab and trigger print
       const string = doc.output('bloburl');
       const x = window.open(string);
-      x.onload = function () {
+      x.onload = () => {
         x.focus();
         x.print();
       };
@@ -225,7 +205,7 @@ const AdminOrders = () => {
                 <th>Payment</th>
                 <th>Total</th>
                 <th>Change Status</th>
-                <th>Actions</th> {/* Adjusted header */}
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -234,47 +214,49 @@ const AdminOrders = () => {
                   <td>{order._id}</td>
                   <td>{order.customerId?.userId?.name || 'N/A'}</td>
                   <td>{formatAddress(order.shippingAddress)}</td>
-
                   <td>
-                    {order.order_items && order.order_items.length > 0 ? (
+                    {order.order_items?.length > 0 ? (
                       <table className="nested-items-table">
                         <thead>
                           <tr>
-                            <th style={{ textAlign: 'left' }}>Product</th>
+                            <th>Product</th>
                             <th>Qty</th>
                             <th>Rs.</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {order.order_items.map((item, index) => (
-                            <tr key={index}>
-                              <td>{item.name || 'Unnamed Item'}</td>
-                              <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                              <td style={{ textAlign: 'right' }}>{item.unitPrice}</td>
+                          {order.order_items.map((item, idx) => (
+                            <tr key={idx}>
+                              <td>{item.name || 'Unnamed'}</td>
+                              <td>{item.quantity}</td>
+                              <td>{item.unitPrice}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                    ) : (
-                      'No items'
-                    )}
+                    ) : 'No items'}
                   </td>
-
                   <td>{order.status}</td>
                   <td>{order.paymentStatus}</td>
-                  <td>Rs. {order.lastAmount}</td>
-
+                  <td>
+                    <div>Subtotal: Rs. {order.totalAmount?.toFixed(2)}</div>
+                    {order.discount > 0 && (
+                      <div style={{ color: 'green' }}>
+                        Discount: -Rs. {order.discount.toFixed(2)}
+                      </div>
+                    )}
+                    <div><strong>Total: Rs. {order.lastAmount.toFixed(2)}</strong></div>
+                  </td>
                   <td>
                     <select
                       value={order.status}
                       onChange={(e) => handleStatusChange(order._id, e.target.value)}
                     >
-                      {statusOptions.map(option => (
-                        <option key={option} value={option}>{option}</option>
+                      {statusOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
                       ))}
                     </select>
                   </td>
-
                   <td>
                     <button
                       onClick={() => handleCancel(order._id)}
@@ -282,14 +264,10 @@ const AdminOrders = () => {
                     >
                       Cancel
                     </button>{' '}
-                    <button
-                      onClick={() => generatePDF(order)}
-                    >
+                    <button onClick={() => generatePDF(order)}>
                       Download Receipt
                     </button>{' '}
-                    <button
-                      onClick={() => generatePDF(order, true)}
-                    >
+                    <button onClick={() => generatePDF(order, true)}>
                       Print Receipt
                     </button>
                   </td>
