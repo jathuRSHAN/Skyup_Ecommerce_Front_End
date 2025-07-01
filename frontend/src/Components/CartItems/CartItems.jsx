@@ -38,7 +38,7 @@ const CartItems = () => {
       {selectedProducts.map((e) => (
         <div key={e.id}>
           <div className="cartitems-format">
-            <img src={e.image} alt="" className="carticon-product-icon" />
+            <img src={e.image[0]} alt="" className="carticon-product-icon" />
             <p>{e.name}</p>
             <p>LKR{e.new_price}</p>
             <input
