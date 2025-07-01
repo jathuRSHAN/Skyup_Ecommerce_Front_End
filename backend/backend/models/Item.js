@@ -6,11 +6,12 @@ const itemSchema = new Schema({
   old_price: { type: Number, required: true },
   new_price: { type: Number, required: true },
   category: { type: String, required: true },
-  image: { type: String, required: true },
+  image: { type: [String], required: true },
   stock: { type: Number, required: true, default: 0 }
 }, {
   timestamps: true
 });
+
 
 itemSchema.pre('save', function (next) {
   const now = new Date();
