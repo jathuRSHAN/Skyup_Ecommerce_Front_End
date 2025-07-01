@@ -4,7 +4,7 @@ import upload_area from '../../assets/upload_area.svg';
 import Notification from '../Notification/Notification';
 
 const AddProduct = () => {
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
   const [productDetails, setProductDetails] = useState({
     name: '',
     old_price: '',
@@ -12,7 +12,6 @@ const AddProduct = () => {
     category: '',
     stock: ''
   });
-
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
   const showNotification = (message, type) => {
@@ -20,24 +19,35 @@ const AddProduct = () => {
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
   };
 
+  // Allow adding images one by one or multiple at once, up to 4
   const imageHandler = (e) => {
-    const file = e.target.files[0];
-    if (file) setImage(file);
+    const files = Array.from(e.target.files);
+    if (images.length + files.length > 4) {
+      showNotification('You can upload a maximum of 4 images.', 'error');
+      return;
+    }
+    setImages(prev => [...prev, ...files]);
+    e.target.value = '';
+  };
+
+  // Remove an image by index
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const changeHandler = (e) => {
     const { name, value } = e.target;
     setProductDetails((prev) => ({
       ...prev,
-      [name]: name === 'old_price' || name === 'new_price' || name === 'stock' ? Number(value) : value
+      [name]: ['old_price', 'new_price', 'stock'].includes(name) ? Number(value) : value
     }));
   };
 
   const Add_Product = async () => {
     const { name, old_price, new_price, category, stock } = productDetails;
 
-    if (!name || !old_price || !new_price || !category || !stock || !image) {
-      showNotification('Please fill all fields and upload an image.', 'error');
+    if (!name || !old_price || !new_price || !category || !stock || images.length !== 4) {
+      showNotification('Fill all fields and upload exactly 4 images.', 'error');
       return;
     }
 
@@ -45,7 +55,7 @@ const AddProduct = () => {
 
     try {
       const formData = new FormData();
-      formData.append('image', image);
+      images.forEach(img => formData.append('images', img));
       formData.append('name', name);
       formData.append('old_price', old_price);
       formData.append('new_price', new_price);
@@ -56,7 +66,6 @@ const AddProduct = () => {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          
         },
         body: formData,
       });
@@ -72,7 +81,7 @@ const AddProduct = () => {
           category: '',
           stock: ''
         });
-        setImage(null);
+        setImages([]);
       } else {
         console.error('Upload failed:', result);
         showNotification(result.error || 'Failed to add product.', 'error');
@@ -115,10 +124,37 @@ const AddProduct = () => {
       </div>
       <div className="addproduct-itemfield">
         <label htmlFor="file-upload">
-          <img src={upload_area} alt="upload" style={{ cursor: 'pointer' }} />
+          <img
+            src={upload_area}
+            alt="upload"
+            style={{
+              cursor: images.length < 4 ? 'pointer' : 'not-allowed',
+              opacity: images.length < 4 ? 1 : 0.5
+            }}
+          />
         </label>
-        <input type="file" id="file-upload" name="image" onChange={imageHandler} hidden />
-        {image && <p>Image selected: {image.name}</p>}
+        <input
+          type="file"
+          id="file-upload"
+          name="images"
+          accept="image/*"
+          multiple
+          onChange={imageHandler}
+          hidden
+          disabled={images.length >= 4}
+        />
+        {images.length > 0 && (
+          <ul style={{ marginTop: '10px' }}>
+            {images.map((img, i) => (
+              <li key={i}>
+                {img.name}
+                <button type="button" style={{ marginLeft: 8 }} onClick={() => removeImage(i)}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <button onClick={Add_Product}>Add</button>
     </div>
