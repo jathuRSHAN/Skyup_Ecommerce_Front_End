@@ -40,9 +40,9 @@ router.get('/:id', async (req, res) => {
 // ✅ Create new item with Cloudinary upload
 router.post('/', upload.single('image'), async (req, res) => {
   try {
-    const { name, new_price, old_price, category, stock } = req.body;
+    const { name, model, new_price, old_price, category, brand, description, stock } = req.body;
 
-    if (!name || !new_price || !old_price || !category || !req.file || stock === undefined) {
+    if (!name || !model || !new_price || !old_price || !category || !brand || !description || !req.file || stock === undefined) {
       return res.status(400).send({ error: 'Missing required fields' });
     }
 
@@ -64,9 +64,12 @@ router.post('/', upload.single('image'), async (req, res) => {
 
     const item = new Item({
       name,
+      model,
       new_price,
       old_price,
       category,
+      brand,
+      description,
       stock: Number(stock),
       image: uploadResult.secure_url,
       imagePublicId: uploadResult.public_id,
@@ -82,7 +85,7 @@ router.post('/', upload.single('image'), async (req, res) => {
 // ✅ Update item by ID with Cloudinary image replacement
 router.put('/:id', upload.single('image'), async (req, res) => {
   try {
-    const { name, new_price, old_price, category, stock } = req.body;
+    const { name, model, new_price, old_price, category, brand, description, stock } = req.body;
 
     const existingItem = await Item.findById(req.params.id);
     if (!existingItem) return res.status(404).send({ error: 'Item not found' });
@@ -119,9 +122,12 @@ router.put('/:id', upload.single('image'), async (req, res) => {
       req.params.id,
       {
         name,
+        model,
         new_price,
         old_price,
         category,
+        brand,
+        description,
         stock: Number(stock),
         image: imageUrl,
         imagePublicId,

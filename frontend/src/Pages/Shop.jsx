@@ -9,12 +9,12 @@ import Footer from '../Components/Footer/Footer'
 const Shop = () => {
   return (
     <div>
-      <Hero/>
-      
-      <Offers/>
-      <NewCollections/>
-      <NewsLetter/>
-   
+      <Hero />
+
+      {/* <Offers/> */}
+      <NewCollections />
+      <NewsLetter />
+
     </div>
   )
 }

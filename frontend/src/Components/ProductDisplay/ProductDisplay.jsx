@@ -44,44 +44,41 @@ const ProductDisplay = (props) => {
       </div>
       <div className="productdisplay-right">
         <h1>{product.name}</h1>
-        <div className="productdisplay-right-star">
+        <div className="productdisplay-right-model">
+          {product.model}
+        </div>
+        {/* <div className="productdisplay-right-star">
           <img src={star_icon} alt="" />
           <img src={star_icon} alt="" />
           <img src={star_icon} alt="" />
           <img src={star_icon} alt="" />
           <img src={star_dull_icon} alt="" />
           <p>(122)</p>
-        </div>
+        </div> */}
         <div className="productdisplay-right-prices">
-          <div className="productdisplay-right-price-old">LKR{product.old_price}</div>
-          <div className="productdisplay-right-price-new">LKR{product.new_price}</div>
+          <div className="productdisplay-right-price-old">Rs. {product.old_price}</div>
+          <div className="productdisplay-right-price-new">Rs. {product.new_price}</div>
+          <div className="Availability">Availability : {product.stock}</div>
         </div>
         <div className="productdisplay-right-description">
-          A lightweight 256GB LED Screen smartphone.
+          <h1>Description</h1>
+          {product.description}
         </div>
-        <div className="productdisplay-right-size">
-          <h1>Select Size</h1>
-          <div className="productdisplay-right-sizes">
-            <div>32GB</div>
-            <div>64GB</div>
-            <div>128GB</div>
-            <div>256GB</div>
-            <div>1TB</div>
-          </div>
+        <div className="product-card1">
+          <button onClick={handleAddToCart}>ADD TO CART</button>
+          <button onClick={handleBuyNow} className="buy-now-button">BUY NOW</button>
         </div>
-        <button onClick={handleAddToCart}>ADD TO CART</button>
-        <button onClick={handleBuyNow} className="buy-now-button">BUY NOW</button>
 
-        <p className='productdisplay-right-category'>
+        {/* <p className='productdisplay-right-category'>
           <span>Category :</span>{' '}
           {Array.isArray(product.category)
             ? product.category.join(', ')
             : product.category || 'Uncategorized'}
-        </p>
+        </p> */}
 
-        <p className='productdisplay-right-category'>
+        {/* <p className='productdisplay-right-category'>
           <span>Tags :</span> Modern, Latest, Limited Edition
-        </p>
+        </p> */}
       </div>
     </div>
   );

@@ -26,40 +26,42 @@ const Navbar = () => {
     <div className="navbar">
       <div className="nav-logo">
         <img src={logo} alt="logo" />
-        <p>EliteCell</p>
+        <p>SL <span><span>Flash</span> Mart</span></p>
       </div>
 
       <ul className="nav-menu">
         <li onClick={() => setMenu("shop")}>
-          <Link style={{ textDecoration: 'none' }} to='/'>Shop</Link>
+          <Link style={{ textDecoration: 'none' }} to='/'><h4>Shop</h4></Link>
           {menu === "shop" ? <hr /> : null}
         </li>
         <li onClick={() => setMenu("gaming")}>
-          <Link style={{ textDecoration: 'none' }} to='/gaming'>Gaming</Link>
+          <Link style={{ textDecoration: 'none' }} to='/gaming'><h4>Gaming</h4></Link>
           {menu === "gaming" ? <hr /> : null}
         </li>
         <li onClick={() => setMenu("phablet")}>
-          <Link style={{ textDecoration: 'none' }} to='/phablet'>Phablet</Link>
+          <Link style={{ textDecoration: 'none' }} to='/phablet'><h4>Phablet</h4></Link>
           {menu === "phablet" ? <hr /> : null}
         </li>
         <li onClick={() => setMenu("budget")}>
-          <Link style={{ textDecoration: 'none' }} to='/budget'>Budget</Link>
+          <Link style={{ textDecoration: 'none' }} to='/budget'><h4>Budget</h4></Link>
           {menu === "budget" ? <hr /> : null}
         </li>
 
+
+      </ul>
+
+
+      <div className="nav-login-cart">
         {isLoggedIn && (
           <li onClick={() => setMenu("my-orders")}>
-            <Link style={{ textDecoration: 'none' }} to='/orders'>My Orders</Link>
+            <Link style={{ textDecoration: 'none' }} to='/orders'><h4>My Orders</h4></Link>
             {menu === "my-orders" ? <hr /> : null}
           </li>
         )}
-      </ul>
-
-      <div className="nav-login-cart">
         {isLoggedIn ? (
           <button onClick={handleLogout}>Logout</button>
         ) : (
-          <Link to="/login"><button>Login</button></Link>
+          <Link to="/login"><button>sign up</button></Link>
         )}
         <Link to="/cart">
           <img src={cart_icon} alt="cart" />

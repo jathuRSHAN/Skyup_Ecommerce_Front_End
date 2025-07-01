@@ -23,7 +23,7 @@ const Admin = () => {
     e.preventDefault();
     setError('');
     try {
-      const response = await axios.post('/api/login', { email, password });
+      const response = await axios.post('http://localhost:8070/api/login', { email, password });
       const { token } = response.data;
       localStorage.setItem('token', token);
       setAuthToken(token);

@@ -7,9 +7,12 @@ const AddProduct = () => {
   const [image, setImage] = useState(null);
   const [productDetails, setProductDetails] = useState({
     name: '',
+    model: '',
     old_price: '',
     new_price: '',
     category: '',
+    brand: '',
+    description: '',
     stock: ''
   });
 
@@ -34,9 +37,9 @@ const AddProduct = () => {
   };
 
   const Add_Product = async () => {
-    const { name, old_price, new_price, category, stock } = productDetails;
+    const { name, model, old_price, new_price, category, brand, description, stock } = productDetails;
 
-    if (!name || !old_price || !new_price || !category || !stock || !image) {
+    if (!name || !model || !old_price || !new_price || !category || !brand || !description || !stock || !image) {
       showNotification('Please fill all fields and upload an image.', 'error');
       return;
     }
@@ -47,16 +50,19 @@ const AddProduct = () => {
       const formData = new FormData();
       formData.append('image', image);
       formData.append('name', name);
+      formData.append('model', model);
       formData.append('old_price', old_price);
       formData.append('new_price', new_price);
       formData.append('category', category);
+      formData.append('brand', brand);
+      formData.append('description', description);
       formData.append('stock', stock);
 
       const response = await fetch('http://localhost:8070/items', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          
+
         },
         body: formData,
       });
@@ -67,9 +73,12 @@ const AddProduct = () => {
         showNotification('Product added successfully!', 'success');
         setProductDetails({
           name: '',
+          model: '',
           old_price: '',
           new_price: '',
           category: '',
+          brand: '',
+          description: '',
           stock: ''
         });
         setImage(null);
@@ -98,6 +107,10 @@ const AddProduct = () => {
         <input name="name" type="text" value={productDetails.name} onChange={changeHandler} />
       </div>
       <div className="addproduct-itemfield">
+        <p>Model</p>
+        <input name="model" type="text" value={productDetails.model} onChange={changeHandler} />
+      </div>
+      <div className="addproduct-itemfield">
         <p>Old Price</p>
         <input name="old_price" type="number" value={productDetails.old_price} onChange={changeHandler} />
       </div>
@@ -109,6 +122,16 @@ const AddProduct = () => {
         <p>Category</p>
         <input name="category" type="text" value={productDetails.category} onChange={changeHandler} />
       </div>
+
+      <div className="addproduct-itemfield">
+        <p>Brand</p>
+        <input name="brand" type="text" value={productDetails.brand} onChange={changeHandler} />
+      </div>
+      <div className="addproduct-itemfield">
+        <p>Description</p>
+        <input name="description" type="text" value={productDetails.description} onChange={changeHandler} />
+      </div>
+
       <div className="addproduct-itemfield">
         <p>Stock</p>
         <input name="stock" type="number" value={productDetails.stock} onChange={changeHandler} />
