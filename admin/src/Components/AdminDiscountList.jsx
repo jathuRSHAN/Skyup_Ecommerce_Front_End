@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import {
-  fetchDiscounts, deleteDiscount, createDiscount,
-  fetchCategories, fetchSubCategories, fetchItems
-} from '../discountAPI';
+import axios from 'axios';
 import Notification from './Notification/Notification';
 import './AdminDiscountList.css';
+
+const API_BASE_URL = 'http://localhost:8070';
+const DISCOUNT_URL = `${API_BASE_URL}/discounts`;
+const CATEGORY_URL = `${API_BASE_URL}/categories`;
+const SUBCATEGORY_URL = `${API_BASE_URL}/sub-categories`;
+const ITEM_URL = `${API_BASE_URL}/items`;
+
+const authHeader = (token) => ({
+  headers: {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  },
+});
 
 const AdminDiscountList = ({ token }) => {
   const [discounts, setDiscounts] = useState([]);
@@ -39,16 +49,16 @@ const AdminDiscountList = ({ token }) => {
 
   useEffect(() => {
     if (user && user.role === 'Admin') {
-      fetchDiscounts(token)
+      axios.get(DISCOUNT_URL, authHeader(token))
         .then(res => setDiscounts(res.data))
         .catch(() => {
           setNotification({ message: 'Failed to fetch discounts', type: 'error' });
           setShowNotification(true);
         });
 
-      fetchCategories(token).then(res => setCategories(res.data)).catch(() => {});
-      fetchSubCategories(token).then(res => setSubCategories(res.data)).catch(() => {});
-      fetchItems(token).then(res => setItems(res.data)).catch(() => {});
+      axios.get(CATEGORY_URL, authHeader(token)).then(res => setCategories(res.data)).catch(() => {});
+      axios.get(SUBCATEGORY_URL, authHeader(token)).then(res => setSubCategories(res.data)).catch(() => {});
+      axios.get(ITEM_URL, authHeader(token)).then(res => setItems(res.data)).catch(() => {});
     }
   }, [token, user]);
 
@@ -94,7 +104,7 @@ const AdminDiscountList = ({ token }) => {
         endDate: new Date(formData.endDate).toISOString()
       };
 
-      const newDiscount = await createDiscount(dataToSend, token);
+      const newDiscount = await axios.post(DISCOUNT_URL, dataToSend, authHeader(token));
       setDiscounts(prev => [...prev, newDiscount.data]);
 
       setFormData({
@@ -150,7 +160,7 @@ const AdminDiscountList = ({ token }) => {
               <button
                 className="admin-button admin-button-delete"
                 onClick={() => {
-                  deleteDiscount(deleteConfirm.discountId, token)
+                  axios.delete(`${DISCOUNT_URL}/${deleteConfirm.discountId}`, authHeader(token))
                     .then(() => {
                       setDiscounts(prev => prev.filter(d => d._id !== deleteConfirm.discountId));
                       setNotification({ message: 'Discount deleted successfully.', type: 'success' });
