@@ -66,7 +66,7 @@ const RelatedProducts = ({ currentProduct }) => {
             onClick={() => setSelectedProduct(item)}
             style={{ cursor: 'pointer' }}
           >
-            <img src={item.image} alt={item.name} />
+            <img src={item.image[0]} alt={item.name} />
             <h3>{item.name}</h3>
             <div className="price-container">
               <span className="new-price">LKR{item.new_price}</span>

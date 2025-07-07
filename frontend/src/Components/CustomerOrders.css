@@ -58,3 +58,18 @@
 .no-orders {
   color: #6c757d;
 }
+.download-btn {
+  padding: 6px 12px;
+  background-color: #70c4e3;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.download-btn:hover {
+  background-color: #5ab2d4;
+  transform: translateY(-1px);
+}

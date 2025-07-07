@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CartItems.css';
 import remove_icon from '../Assets/remove_icon.png';
@@ -8,6 +8,20 @@ const CartItems = () => {
   const { all_product, cartItems, removeFromCart, updateCartItem } = useContext(ShopContext);
   const navigate = useNavigate();
 
+  // local input values for editing quantities
+  const [inputValues, setInputValues] = useState({});
+
+  // Sync inputValues with cartItems on mount or update
+  useEffect(() => {
+    const initialValues = {};
+    all_product.forEach((product) => {
+      if (cartItems[product.id] > 0) {
+        initialValues[product.id] = cartItems[product.id].toString();
+      }
+    });
+    setInputValues(initialValues);
+  }, [cartItems, all_product]);
+
   const getTotalCartAmount = () => {
     return all_product.reduce((total, product) => {
       return total + (cartItems[product.id] || 0) * product.new_price;
@@ -16,13 +30,36 @@ const CartItems = () => {
 
   const totalAmount = getTotalCartAmount();
 
-  // Create an array of selected products with quantity > 0
   const selectedProducts = all_product
     .filter((p) => cartItems[p.id] > 0)
     .map((p) => ({
       ...p,
       quantity: cartItems[p.id],
     }));
+
+  const handleInputChange = (id, value) => {
+    // Allow only digits or empty string
+    if (/^\d*$/.test(value)) {
+      setInputValues((prev) => ({
+        ...prev,
+        [id]: value,
+      }));
+    }
+  };
+
+  const commitQuantityChange = (id) => {
+    const value = inputValues[id];
+    const parsed = parseInt(value);
+    if (!isNaN(parsed) && parsed >= 0) {
+      updateCartItem(id, parsed);
+    } else {
+      // Revert to current cart quantity if invalid
+      setInputValues((prev) => ({
+        ...prev,
+        [id]: cartItems[id].toString(),
+      }));
+    }
+  };
 
   return (
     <div className="cartitems">
@@ -38,17 +75,20 @@ const CartItems = () => {
       {selectedProducts.map((e) => (
         <div key={e.id}>
           <div className="cartitems-format">
-            <img src={e.image} alt="" className="carticon-product-icon" />
+            <img src={e.image[0]} alt="" className="carticon-product-icon" />
             <p>{e.name}</p>
             <p>LKR{e.new_price}</p>
             <input
               type="number"
               min="0"
               className="cartitems-quantity-input"
-              value={e.quantity}
-              onChange={(event) => {
-                const value = parseInt(event.target.value) || 0;
-                updateCartItem(e.id, value);
+              value={inputValues[e.id] ?? e.quantity}
+              onChange={(event) => handleInputChange(e.id, event.target.value)}
+              onBlur={() => commitQuantityChange(e.id)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  commitQuantityChange(e.id);
+                }
               }}
             />
             <p>LKR{(e.new_price * e.quantity).toFixed(2)}</p>

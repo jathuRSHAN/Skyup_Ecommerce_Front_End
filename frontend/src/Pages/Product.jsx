@@ -14,7 +14,7 @@ const Product = () => {
     return <div>Loading product...</div>;
   }
 
-
+  // Make sure to compare _id or id properly
   const product = all_product.find((e) => e._id === productId || e.id === productId);
 
   if (!product) {

@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const crypto = require('crypto');
 
 const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const Item = require('../models/Item');
 const Payment = require('../models/Payment');
+const Discount = require('../models/Discount'); // ✅ Import Discount model
 
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
@@ -27,23 +27,23 @@ router.get('/', authenticateToken, authorizeRole("Admin"), async (req, res) => {
   }
 });
 
-// Get orders of the logged-in customer
+// Get logged-in customer's orders
 router.get('/my-orders', authenticateToken, async (req, res) => {
   try {
-    const customer = await Customer.findOne({ userId: req.user.id }).exec();
-
-    if (!customer) {
-      return res.status(404).json({ error: 'Customer profile not found' });
-    }
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) return res.status(404).json({ error: 'Customer profile not found' });
 
     const orders = await Order.find({ customerId: customer._id })
+      .populate({
+        path: 'customerId',
+        populate: { path: 'userId', select: 'name' }
+      })
       .populate('order_items.itemId', 'name new_price')
-      .sort({ createdAt: -1 })
-      .exec();
+      .sort({ createdAt: -1 });
 
     res.status(200).json(orders);
   } catch (error) {
-    console.error("❌ Error fetching logged-in user's orders:", error);
+    console.error("❌ Error fetching user's orders:", error);
     res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
@@ -55,7 +55,7 @@ router.get('/customer/:customerId', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    const orders = await Order.find({ customerId: req.params.customerId }).exec();
+    const orders = await Order.find({ customerId: req.params.customerId });
     res.status(200).json(orders);
   } catch (error) {
     console.error("Error fetching customer orders:", error);
@@ -77,47 +77,83 @@ router.get('/:id', authenticateToken, async (req, res) => {
       .populate({
         path: 'customerId',
         populate: { path: 'userId', select: 'name email' }
-      })
-      .exec();
+      });
 
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
     res.status(200).json(order);
   } catch (error) {
-    console.error("Error fetching order by ID:", error);
+    console.error("Error fetching order:", error);
     res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 
-// Create a new order
+// Create a new order with auto-discount
+
+
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { order_items, discount = 0, shippingAddress } = req.body;
+    const { order_items, shippingAddress, paymentMethod = 'Other', paymentDetails } = req.body;
+    const customer = await Customer.findOne({ userId: req.user.id });
+    if (!customer) throw new Error('Customer profile not found');
 
-    if (!Array.isArray(order_items) || order_items.length === 0) {
-      return res.status(400).json({ error: 'Invalid or missing order_items' });
+    const items = await Promise.all(order_items.map(async it => {
+      const prod = await Item.findById(it.itemId);
+      if (!prod) throw new Error(`Item not found: ${it.itemId}`);
+      return {
+        itemId: prod._id,
+        quantity: it.quantity,
+        unitPrice: prod.new_price,
+        name: prod.name,
+        category: prod.category,
+        subCategory: prod.subCategory
+      };
+    }));
+
+    const totalAmount = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    console.log('🔢 Total amount:', totalAmount);
+
+    const now = new Date();
+    const discounts = await Discount.find({
+      isActive: true,
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    });
+    console.log('📦 Available discounts:', discounts.map(d => d.code));
+
+    let best = null;
+    let discountAmount = 0;
+
+    for (const d of discounts) {
+      const applies = items.some(item =>
+        (d.applicableItems || []).map(id => id.toString()).includes(item.itemId.toString()) ||
+        (d.applicableSubCategories || []).map(id => id.toString()).includes(item.subCategory?.toString()) ||
+        (d.applicableCategories || []).map(id => id.toString()).includes(item.category?.toString())
+      );
+      console.log(`→ Discount ${d.code}: applies=${applies}, minPurchase=${d.minPurchase}`);
+
+      if (applies && totalAmount >= (d.minPurchase || 0)) {
+        if (!best || d.value > best.value) {
+          best = d;
+        }
+      }
     }
 
-    const customer = await Customer.findOne({ userId: req.user.id });
-    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+    if (best) {
+      console.log('✅ Best discount chosen:', best.code);
+      if (best.type === 'percentage') {
+        discountAmount = (totalAmount * best.value) / 100;
+        if (best.maxDiscount) discountAmount = Math.min(discountAmount, best.maxDiscount);
+      } else {
+        discountAmount = best.value;
+      }
+    }
 
-    const items = await Promise.all(
-      order_items.map(async item => {
-        const product = await Item.findById(item.itemId);
-        if (!product) throw new Error(`Item not found: ${item.itemId}`);
-        return {
-          itemId: product._id,
-          quantity: item.quantity,
-          unitPrice: product.new_price,
-          name: product.name
-        };
-      })
-    );
+    console.log('Final discount amount:', discountAmount);
 
-    const totalAmount = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const finalAmount = totalAmount - discount;
+    const lastAmount = totalAmount - discountAmount;
 
-    // Check stock and reduce
+    // ✅ Check and reduce stock
     for (const item of items) {
       const product = await Item.findById(item.itemId);
       if (product.stock < item.quantity) {
@@ -127,38 +163,40 @@ router.post('/', authenticateToken, async (req, res) => {
       await product.save();
     }
 
+    // ✅ Create and save payment
     const payment = new Payment({
       customerId: customer._id,
       amount: totalAmount,
       currency: 'LKR',
-      paymentMethod: 'Other',
+      paymentMethod,
       transactionId: null,
       status: 'Pending'
     });
+    await payment.save();
 
+    // ✅ Create and save order
     const order = new Order({
       customerId: customer._id,
       totalAmount,
-      discount,
-      lastAmount: finalAmount,
+      discount: discountAmount,
+      lastAmount,
       status: 'New',
       paymentStatus: 'Pending',
       paymentId: payment._id,
       order_items: items,
       shippingAddress
     });
-
-    await payment.save();
     await order.save();
 
     res.status(201).json({
       message: 'Order created successfully',
       order,
-      payment
+      appliedDiscount: best?.code || null,
+      discountAmount
     });
 
   } catch (error) {
-    console.error("Order creation failed:", error);
+    console.error("🚫 Order creation error:", error.message);
     res.status(500).json({
       error: "Order creation error",
       details: error.message
@@ -166,14 +204,15 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
+
 // Cancel order
 router.put('/cancel/:id', authenticateToken, authorizeRole("Admin"), async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).exec();
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
-    if (order.status === 'Done') return res.status(400).json({ error: 'Order is already completed' });
-    if (order.status === 'Cancelled') return res.status(400).json({ error: 'Order is already cancelled' });
+    if (order.status === 'Done') return res.status(400).json({ error: 'Order already completed' });
+    if (order.status === 'Cancelled') return res.status(400).json({ error: 'Order already cancelled' });
 
     order.status = 'Cancelled';
     order.paymentStatus = 'Cancelled';
@@ -186,6 +225,7 @@ router.put('/cancel/:id', authenticateToken, authorizeRole("Admin"), async (req,
 
     await order.save();
     res.status(200).json({ message: 'Order cancelled successfully', order });
+
   } catch (error) {
     console.error("Error cancelling order:", error);
     res.status(500).json({ error: "Server error", details: error.message });
@@ -195,7 +235,7 @@ router.put('/cancel/:id', authenticateToken, authorizeRole("Admin"), async (req,
 // Update order status
 router.put('/:id/status', authenticateToken, authorizeRole("Admin"), async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).exec();
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
     const { status } = req.body;
@@ -219,6 +259,7 @@ router.put('/:id/status', authenticateToken, authorizeRole("Admin"), async (req,
     await order.save();
 
     res.status(200).json({ message: 'Order status updated successfully', order });
+
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ error: "Server error", details: error.message });

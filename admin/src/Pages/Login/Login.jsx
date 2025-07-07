@@ -21,10 +21,9 @@ const Login = () => {
 
       const { token } = response.data;
 
-      // Save token to localStorage
       localStorage.setItem('token', token);
 
-      // Redirect to admin dashboard
+      
       navigate('/admin');
     } catch (err) {
       if (err.response?.data?.error) {

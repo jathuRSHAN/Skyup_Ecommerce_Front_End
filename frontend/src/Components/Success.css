@@ -82,7 +82,7 @@
 }
 
 .back-btn:hover {
-  background-color: #217dbb;
+  background-color: #4f95c4;
 }
 
 /* View My Orders button */
@@ -94,3 +94,14 @@
 .orders-btn:hover {
   background-color: #1e874b;
 }
+.receipt-btn {
+  background-color: #59bcd5;
+  color: white;
+ 
+}
+
+.receipt-btn:hover {
+  background-color: #45a049;
+}
+
+

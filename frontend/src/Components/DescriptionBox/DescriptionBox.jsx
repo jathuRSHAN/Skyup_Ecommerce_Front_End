@@ -1,22 +1,28 @@
-import React from 'react'
-import './DescriptionBox.css'
+import React, { useEffect, useState } from 'react';
+import './DescriptionBox.css';
+import axios from 'axios';
 
 const DescriptionBox = () => {
+  const [data, setData] = useState({});
+
+  useEffect(() => {
+    axios.get('http://localhost:8070/content/DescriptionBox')
+      .then(res => setData(res.data.data || {}))
+      .catch(err => console.error("Description content load error:", err));
+  }, []);
+
   return (
     <div className='descriptionbox'>
-        <div className="descriptionbox-navigator">
-            <div className= "descriptionbox-nav-box">Description</div>
-            <div className= "descriptionbox-nav-box fade">Reviews(122)</div>
+      <div className="descriptionbox-navigator">
+        <div className="descriptionbox-nav-box">{data.heading || 'Description'}</div>
+        <div className="descriptionbox-nav-box fade">Reviews (122)</div>
+      </div>
 
-        </div>
       <div className="descriptionbox-description">
-        <p>Discover the best deals on top-brand smartphones, from powerful gaming phones to budget-friendly models 
-          and cutting-edge phablets. 
-          At EliteCell, we bring you the newest tech, unbeatable prices, and fast delivery—all in one place.</p>
-            <p>Stay connected in style with phones that match your lifestyle, needs, and budget.</p>
-            </div>
+        <p>{data.description || 'Description is not available at the moment.'}</p>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default DescriptionBox
+export default DescriptionBox;
