@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './NewCollections.css';
-import ProductDisplay from '../ProductDisplay/ProductDisplay'; 
-import RelatedProducts from '../RelatedProducts/RelatedProducts'; // 🔹 Import
+import ProductDisplay from '../ProductDisplay/ProductDisplay';
+import RelatedProducts from '../RelatedProducts/RelatedProducts';
 
 const NewCollections = () => {
   const [newCollection, setNewCollection] = useState([]);
   const [error, setError] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null); 
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost:8070/items/newcollection')
@@ -33,13 +33,12 @@ const NewCollections = () => {
     setSelectedProduct(null);
   };
 
-  // 🔽 Product display + related products
   if (selectedProduct) {
     return (
       <div className="new-collections">
         <button onClick={handleBackToList} className="back-button">← Back to Products</button>
         <ProductDisplay product={selectedProduct} />
-        
+        <RelatedProducts currentProduct={selectedProduct} />
       </div>
     );
   }
@@ -56,7 +55,7 @@ const NewCollections = () => {
             <div
               className="product-card"
               key={index}
-              onClick={() => setSelectedProduct(item)} 
+              onClick={() => setSelectedProduct(item)}
               style={{ cursor: 'pointer' }}
             >
               <img src={item.image[0]} alt={item.name} />
