@@ -95,10 +95,25 @@
   border-radius: 4px;
 }
 
+
+.product-display {
+    margin-bottom: 40px;
+}
+
+
+.relatedproducts {
+    margin-top: 40px;
+}
+
+
+.product-card {
+    margin-bottom: 20px;
+}
+
 @media (max-width: 768px) {
     .collections {
-        grid-template-columns: repeat(2, 1fr); /* 2 products per row on smaller screens */
-        grid-template-rows: auto; /* Adjust rows automatically */
+        grid-template-columns: repeat(2, 1fr); 
+        grid-template-rows: auto;
         gap: 20px;
     }
 
