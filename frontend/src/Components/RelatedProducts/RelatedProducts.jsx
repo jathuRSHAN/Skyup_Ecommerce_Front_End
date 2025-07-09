@@ -7,30 +7,23 @@ const RelatedProducts = ({ currentProduct }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
 
-  const handleBackToList = () => {
-    setSelectedProduct(null);
-  };
-
+  // Fetch related products when selectedProduct changes
   useEffect(() => {
     const fetchRelated = async () => {
-      if (currentProduct?.category) {
+      const productToFetch = selectedProduct || currentProduct;
+
+      if (productToFetch?.category) {
         try {
-          // Extract category (handle if it's an array)
-          const category = Array.isArray(currentProduct.category)
-            ? currentProduct.category[0]
-            : currentProduct.category;
+          const category = Array.isArray(productToFetch.category)
+            ? productToFetch.category[0]
+            : productToFetch.category;
 
-          // Log to verify what's being used
-          console.log('Fetching related for category:', category);
-
-          // Make GET request to backend
           const response = await axios.get(
             `http://localhost:8070/items/related/${category.toLowerCase()}`
           );
 
-          // Filter out the current product
           const filtered = response.data.filter(
-            (item) => item._id !== currentProduct._id
+            (item) => item._id !== productToFetch._id
           );
 
           setRelatedProducts(filtered);
@@ -41,23 +34,30 @@ const RelatedProducts = ({ currentProduct }) => {
     };
 
     fetchRelated();
-  }, [currentProduct]);
+  }, [selectedProduct, currentProduct]);
 
-  if (selectedProduct) {
-    return (
-      <div className="relatedproducts">
-        <button onClick={handleBackToList} className="back-button">
-          ← Back to Related Products
-        </button>
-        <ProductDisplay product={selectedProduct} />
-      </div>
-    );
-  }
+  const handleBackToList = () => {
+    setSelectedProduct(null);
+  };
 
   return (
     <div className="relatedproducts">
-      <h1>Related Products</h1>
-      <hr />
+      {selectedProduct ? (
+        <>
+          <button onClick={handleBackToList} className="back-button">
+            ← Back to Related Products
+          </button>
+          <ProductDisplay key={selectedProduct._id} product={selectedProduct} />
+          <h2 style={{ marginTop: '20px' }}>More Related Products</h2>
+          <hr />
+        </>
+      ) : (
+        <>
+          <h1>Related Products</h1>
+          <hr />
+        </>
+      )}
+
       <div className="relatedproducts-item">
         {relatedProducts.map((item) => (
           <div
@@ -66,7 +66,12 @@ const RelatedProducts = ({ currentProduct }) => {
             onClick={() => setSelectedProduct(item)}
             style={{ cursor: 'pointer' }}
           >
-            <img src={item.image[0]} alt={item.name} />
+            <img
+              key={item._id + item.image?.[0]}
+              src={item.image?.[0]}
+              alt={item.name}
+              className="product-image"
+            />
             <h3>{item.name}</h3>
             <div className="price-container">
               <span className="new-price">LKR{item.new_price}</span>
