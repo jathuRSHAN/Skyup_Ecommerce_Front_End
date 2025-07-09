@@ -3,17 +3,50 @@ import './Navbar.css';
 import { Link } from 'react-router-dom';
 import { ShopContext } from '../../Context/ShopContext';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; 
 
 const Navbar = () => {
   const [menu, setMenu] = useState("shop");
   const { getTotalCartItems, saveCartBeforeLogout } = useContext(ShopContext);
   const [data, setData] = useState({});
-  const isLoggedIn = !!localStorage.getItem('auth-token');
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('auth-token'));
 
+  // Fetch Navbar content
   useEffect(() => {
     axios.get('http://localhost:8070/content/Navbar')
       .then(res => setData(res.data.data || {}))
       .catch(err => console.error("Navbar content load error:", err));
+  }, []);
+
+  // JWT Expiry Checker
+  useEffect(() => {
+    const token = localStorage.getItem('auth-token');
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token); 
+        const expiry = decodedToken.exp * 1000;
+        const now = Date.now();
+
+        if (expiry > now) {
+          setIsLoggedIn(true);
+          const timeout = expiry - now;
+
+          const timer = setTimeout(() => {
+            localStorage.removeItem('auth-token');
+            setIsLoggedIn(false);
+          }, timeout);
+
+          return () => clearTimeout(timer);
+        } else {
+          localStorage.removeItem('auth-token');
+          setIsLoggedIn(false);
+        }
+      } catch (err) {
+        console.error("Token decode error:", err);
+        localStorage.removeItem('auth-token');
+        setIsLoggedIn(false);
+      }
+    }
   }, []);
 
   const handleLogout = async () => {
@@ -23,6 +56,7 @@ const Navbar = () => {
       console.error("Error saving cart before logout:", error);
     } finally {
       localStorage.removeItem('auth-token');
+      setIsLoggedIn(false);
       window.location.replace('/');
     }
   };
