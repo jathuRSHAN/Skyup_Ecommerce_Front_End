@@ -6,7 +6,7 @@ const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const Item = require('../models/Item');
 const Payment = require('../models/Payment');
-const Discount = require('../models/Discount'); // ✅ Import Discount model
+const Discount = require('../models/Discount'); // 
 
 const { authenticateToken, authorizeRole } = require('../middlewares/authMiddleware');
 
@@ -16,7 +16,10 @@ router.get('/', authenticateToken, authorizeRole("Admin"), async (req, res) => {
     const orders = await Order.find()
       .populate({
         path: 'customerId',
-        populate: { path: 'userId', select: 'name' }
+        populate: {
+          path: 'userId',
+          select: 'name email phone', 
+        }
       })
       .exec();
 
