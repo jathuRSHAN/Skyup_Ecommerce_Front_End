@@ -104,10 +104,17 @@ const AdminOrders = () => {
 
     let startY = 10 + imgHeight + 20;
 
+    const user = order.customerId?.userId;
     doc.text(`Order ID: ${order._id}`, margin + 4, startY);
     startY += 8;
 
-    doc.text(`Customer Name: ${order.customerId?.userId?.name || 'N/A'}`, margin + 4, startY);
+    doc.text(`Customer Name: ${user?.name || 'N/A'}`, margin + 4, startY);
+    startY += 8;
+
+    doc.text(`Email: ${user?.email || 'N/A'}`, margin + 4, startY);
+    startY += 8;
+
+    doc.text(`Phone: ${user?.phone || 'N/A'}`, margin + 4, startY);
     startY += 8;
 
     doc.text(`Payment Status: ${order.paymentStatus}`, margin + 4, startY);
@@ -199,6 +206,8 @@ const AdminOrders = () => {
               <tr>
                 <th>Order ID</th>
                 <th>Customer Name</th>
+                <th>Email</th>
+                <th>Phone</th>
                 <th>Address</th>
                 <th>Items</th>
                 <th>Status</th>
@@ -209,70 +218,75 @@ const AdminOrders = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.map(order => (
-                <tr key={order._id}>
-                  <td>{order._id}</td>
-                  <td>{order.customerId?.userId?.name || 'N/A'}</td>
-                  <td>{formatAddress(order.shippingAddress)}</td>
-                  <td>
-                    {order.order_items?.length > 0 ? (
-                      <table className="nested-items-table">
-                        <thead>
-                          <tr>
-                            <th>Product</th>
-                            <th>Qty</th>
-                            <th>Rs.</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {order.order_items.map((item, idx) => (
-                            <tr key={idx}>
-                              <td>{item.name || 'Unnamed'}</td>
-                              <td>{item.quantity}</td>
-                              <td>{item.unitPrice}</td>
+              {orders.map(order => {
+                const user = order.customerId?.userId;
+                return (
+                  <tr key={order._id}>
+                    <td>{order._id}</td>
+                    <td>{user?.name || 'N/A'}</td>
+                    <td>{user?.email || 'N/A'}</td>
+                    <td>{user?.phone || 'N/A'}</td>
+                    <td>{formatAddress(order.shippingAddress)}</td>
+                    <td>
+                      {order.order_items?.length > 0 ? (
+                        <table className="nested-items-table">
+                          <thead>
+                            <tr>
+                              <th>Product</th>
+                              <th>Qty</th>
+                              <th>Rs.</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : 'No items'}
-                  </td>
-                  <td>{order.status}</td>
-                  <td>{order.paymentStatus}</td>
-                  <td>
-                    <div>Subtotal: Rs. {order.totalAmount?.toFixed(2)}</div>
-                    {order.discount > 0 && (
-                      <div style={{ color: 'green' }}>
-                        Discount: -Rs. {order.discount.toFixed(2)}
-                      </div>
-                    )}
-                    <div><strong>Total: Rs. {order.lastAmount.toFixed(2)}</strong></div>
-                  </td>
-                  <td>
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                    >
-                      {statusOptions.map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleCancel(order._id)}
-                      disabled={order.status === "Cancelled"}
-                    >
-                      Cancel
-                    </button>{' '}
-                    <button onClick={() => generatePDF(order)}>
-                      Download Receipt
-                    </button>{' '}
-                    <button onClick={() => generatePDF(order, true)}>
-                      Print Receipt
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                          </thead>
+                          <tbody>
+                            {order.order_items.map((item, idx) => (
+                              <tr key={idx}>
+                                <td>{item.name || 'Unnamed'}</td>
+                                <td>{item.quantity}</td>
+                                <td>{item.unitPrice}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      ) : 'No items'}
+                    </td>
+                    <td>{order.status}</td>
+                    <td>{order.paymentStatus}</td>
+                    <td>
+                      <div>Subtotal: Rs. {order.totalAmount?.toFixed(2)}</div>
+                      {order.discount > 0 && (
+                        <div style={{ color: 'green' }}>
+                          Discount: -Rs. {order.discount.toFixed(2)}
+                        </div>
+                      )}
+                      <div><strong>Total: Rs. {order.lastAmount.toFixed(2)}</strong></div>
+                    </td>
+                    <td>
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                      >
+                        {statusOptions.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleCancel(order._id)}
+                        disabled={order.status === "Cancelled"}
+                      >
+                        Cancel
+                      </button>{' '}
+                      <button onClick={() => generatePDF(order)}>
+                        Download Receipt
+                      </button>{' '}
+                      <button onClick={() => generatePDF(order, true)}>
+                        Print Receipt
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
