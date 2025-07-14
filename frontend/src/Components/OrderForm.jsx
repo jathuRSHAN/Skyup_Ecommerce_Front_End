@@ -20,7 +20,7 @@ const OrderForm = () => {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState('');
   const [showNotification, setShowNotification] = useState(false);
-  const [notificationType, setNotificationType] = useState(''); // 'success' or 'error'
+  const [notificationType, setNotificationType] = useState('');
 
   useEffect(() => {
     if (!directProduct) {
@@ -33,9 +33,7 @@ const OrderForm = () => {
     setNotification(message);
     setNotificationType(type);
     setShowNotification(true);
-    setTimeout(() => {
-      setShowNotification(false);
-    }, 3000);
+    setTimeout(() => setShowNotification(false), 3000);
   };
 
   const handlePlaceOrder = async () => {
@@ -80,7 +78,6 @@ const OrderForm = () => {
         'http://localhost:8070/orders',
         {
           order_items: orderItems,
-          discount: 10,
           shippingAddress: address,
           paymentMethod,
           paymentDetails: { cardNumber },
@@ -100,7 +97,10 @@ const OrderForm = () => {
       }, 1500);
     } catch (err) {
       console.error('Error placing order:', err.response?.data || err.message);
-      showCustomNotification(`Error placing order: ${err.response?.data?.message || 'Unknown error'}`, 'error');
+      showCustomNotification(
+        `Error placing order: ${err.response?.data?.message || 'Unknown error'}`,
+        'error'
+      );
     } finally {
       setLoading(false);
     }

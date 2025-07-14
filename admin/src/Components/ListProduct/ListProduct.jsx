@@ -145,7 +145,7 @@ const ListProduct = () => {
           </div>
           {allProducts.map(product => (
             <div key={product._id} className="listproduct-format">
-              <img src={product.image} alt="product" className="listproduct-product-icon" />
+              <img src={product.image[0]} alt="product" className="listproduct-product-icon" />
               <p>{product.name}</p>
               <p>LKR{product.new_price}</p>
               <p>LKR{product.old_price}</p>

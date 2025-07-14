@@ -4,8 +4,7 @@ const Item = require('../models/Item');
 const upload = require('../utils/multerConfig.js');
 const cloudinary = require('../utils/cloudinary.js');
 const fs = require('fs');
-const path = require('path');
-
+const path = require('path')
 // ✅ Get latest 8 items
 router.get('/newcollection', async (req, res) => {
   try {
@@ -38,12 +37,12 @@ router.get('/:id', async (req, res) => {
 });
 
 // ✅ Create new item with Cloudinary upload
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', upload.array('images', 4), async (req, res) => {
   try {
     const { name, new_price, old_price, category, stock } = req.body;
 
-    if (!name || !new_price || !old_price || !category || !req.file || stock === undefined) {
-      return res.status(400).send({ error: 'Missing required fields' });
+    if (!name || !new_price || !old_price || !category || !req.files || req.files.length < 1 || stock === undefined) {
+      return res.status(400).send({ error: 'Missing required fields or images' });
     }
 
     const existingItem = await Item.findOne({ name });
@@ -51,16 +50,16 @@ router.post('/', upload.single('image'), async (req, res) => {
       return res.status(400).send({ error: 'Item with this name already exists' });
     }
 
-    // Upload image to Cloudinary
-    const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { folder: 'items' },
-        (error, result) => {
-          if (error) return reject(error);
-          resolve(result);
-        }
-      ).end(req.file.buffer);
-    });
+    const uploadedImages = await Promise.all(
+      req.files.map(file => {
+        return new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream({ folder: 'items' }, (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }).end(file.buffer);
+        });
+      })
+    );
 
     const item = new Item({
       name,
@@ -68,8 +67,7 @@ router.post('/', upload.single('image'), async (req, res) => {
       old_price,
       category,
       stock: Number(stock),
-      image: uploadResult.secure_url,
-      imagePublicId: uploadResult.public_id,
+      image: uploadedImages, // array of URLs
     });
 
     await item.save();
@@ -155,5 +153,37 @@ router.delete('/:id', async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 });
+
+// ✅ Get latest 4 items for a given category
+router.get('/related/:category', async (req, res) => {
+  try {
+    const category = req.params.category;
+    const items = await Item.find({ category })
+      .sort({ _id: -1 })
+      .limit(4);
+    res.status(200).send(items);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+// POST /items/prices - for calculating total price from item IDs
+router.post('/prices', async (req, res) => {
+  try {
+    const { items } = req.body; // items: [{ itemId, quantity }]
+    let total = 0;
+
+    for (const item of items) {
+      const dbItem = await Item.findById(item.itemId);
+      if (dbItem) {
+        total += dbItem.new_price * item.quantity;
+      }
+    }
+
+    res.send({ total });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
 
 module.exports = router;

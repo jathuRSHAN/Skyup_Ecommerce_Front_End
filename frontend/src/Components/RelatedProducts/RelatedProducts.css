@@ -86,3 +86,10 @@
 .back-button:hover {
   background-color: #333;
 }
+.relatedproducts h1 {
+    margin-bottom: 10px;
+}
+
+.relatedproducts hr {
+    margin-bottom: 30px;
+}
