@@ -3,6 +3,8 @@ import './RelatedProducts.css';
 import ProductDisplay from '../ProductDisplay/ProductDisplay';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const RelatedProducts = ({ currentProduct }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -19,7 +21,7 @@ const RelatedProducts = ({ currentProduct }) => {
             : productToFetch.category;
 
           const response = await axios.get(
-            `http://localhost:8070/items/related/${category.toLowerCase()}`
+            `${API_BASE_URL}/items/related/${category.toLowerCase()}`
           );
 
           const filtered = response.data.filter(
