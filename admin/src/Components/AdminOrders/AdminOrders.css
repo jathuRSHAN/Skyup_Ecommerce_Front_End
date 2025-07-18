@@ -11,6 +11,12 @@
   }
 }
 
+@media (max-width: 500px) {
+  .admin-orders-container {
+    padding: 10px 15px;
+  }
+}
+
 .admin-orders-container h2 {
   margin-bottom: 20px;
   font-size: 24px;
@@ -38,6 +44,7 @@
   border: 1px solid #ddd;
   text-align: center;
   vertical-align: middle;
+  font-size: 14px;
 }
 
 .orders-table th {
@@ -55,7 +62,6 @@
   outline: none;
 }
 
-/* Base button style */
 .orders-table button {
   font-weight: 500;
   transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
@@ -65,14 +71,12 @@
   margin: 4px 2px;
 }
 
-/* Cancel button override */
 .orders-table td:last-child button:first-child {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
 }
 
-/* Hover effects */
 .orders-table button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
@@ -85,7 +89,6 @@
   background-color: #5ab2d4;
 }
 
-/* Disabled button */
 .orders-table button:disabled {
   background-color: #ccc;
   color: #666;
@@ -105,7 +108,6 @@
   }
 }
 
-/* Nested table inside Items */
 .nested-items-table {
   width: 100%;
   border-collapse: collapse;
@@ -120,7 +122,6 @@
   font-size: 13px;
 }
 
-/* Customer cell formatting */
 .orders-table td:nth-child(2) {
   text-align: left;
   line-height: 1.5;
@@ -136,4 +137,60 @@
   display: block;
   font-size: 13px;
   color: #555;
+}
+
+/* ✅ Additional Responsive Enhancements */
+
+@media (max-width: 992px) {
+  .orders-table th,
+  .orders-table td {
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+
+  .orders-table button {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .orders-table select {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .nested-items-table td,
+  .nested-items-table th {
+    font-size: 12px;
+    padding: 3px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-orders-container h2 {
+    font-size: 20px;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+
+  .orders-table button {
+    padding: 4px 8px;
+    font-size: 11px;
+    margin: 2px;
+  }
+
+  .orders-table select {
+    font-size: 11px;
+  }
+
+  .orders-table td:nth-child(2) strong {
+    font-size: 13px;
+  }
+
+  .orders-table td:nth-child(2) span {
+    font-size: 12px;
+  }
 }
