@@ -24,6 +24,25 @@ router.get('/', async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 });
+// ✅ Search by name or category
+router.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query; // query string
+
+    if (!query) {
+      return res.status(400).send({ error: 'Search query is required' });
+    }
+
+    const regex = new RegExp(query, 'i'); // case-insensitive
+    const items = await Item.find({
+      $or: [{ name: regex }, { category: regex }]
+    });
+
+    res.status(200).send(items);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
 
 // ✅ Get item by ID
 router.get('/:id', async (req, res) => {

@@ -3,6 +3,8 @@ import './ListProduct.css';
 import cross_icon from '../../assets/cross_icon.png';
 import Notification from '../Notification/Notification';
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 const ListProduct = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ const ListProduct = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Token not found. Please log in.');
 
-      const res = await fetch('http://localhost:8070/items', {
+      const res = await fetch(`${API_BASE_URL}/items`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -57,7 +59,7 @@ const ListProduct = () => {
       const token = localStorage.getItem('token');
       if (!token) return showNotification('Token not found. Please log in.', 'error');
 
-      const res = await fetch(`http://localhost:8070/items/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/items/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +94,7 @@ const ListProduct = () => {
   const handleUpdate = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:8070/items/${editingProduct._id}`, {
+      const res = await fetch(`${API_BASE_URL}/items/${editingProduct._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

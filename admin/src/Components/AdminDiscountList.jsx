@@ -3,7 +3,8 @@ import axios from 'axios';
 import Notification from './Notification/Notification';
 import './AdminDiscountList.css';
 
-const API_BASE_URL = 'http://localhost:8070';
+// Use Vite environment variable
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const DISCOUNT_URL = `${API_BASE_URL}/discounts`;
 const CATEGORY_URL = `${API_BASE_URL}/categories`;
 const SUBCATEGORY_URL = `${API_BASE_URL}/sub-categories`;

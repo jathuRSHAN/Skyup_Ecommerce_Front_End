@@ -1,67 +1,70 @@
-import React, { useState } from 'react';
-import './Admin.css';
-import Sidebar from '../../Components/Sidebar/Sidebar';
-import { Routes, Route } from 'react-router-dom';
-import AddProduct from '../../Components/AddProduct/AddProduct';
-import ListProduct from '../../Components/ListProduct/ListProduct';
-import AdminDiscountList from '../../Components/AdminDiscountList';
-import AdminOrders from '../../Components/AdminOrders/AdminOrders';
-import TransferAdminPanel from '../../Components/TransferAdminPanel/TransferAdminPanel';
-import axios from 'axios';
+import React, { useState } from "react";
+import "./Admin.css";
+import Sidebar from "../../Components/Sidebar/Sidebar";
+import { Routes, Route } from "react-router-dom";
+import AddProduct from "../../Components/AddProduct/AddProduct";
+import ListProduct from "../../Components/ListProduct/ListProduct";
+import AdminDiscountList from "../../Components/AdminDiscountList";
+import AdminOrders from "../../Components/AdminOrders/AdminOrders";
+import TransferAdminPanel from "../../Components/TransferAdminPanel/TransferAdminPanel";
+import ContentEditor from "../ContentEditor";
+import axios from "axios";
 
 const Admin = () => {
-  const [authToken, setAuthToken] = useState(localStorage.getItem('token'));
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [error, setError] = useState('');
-  const [showSignup, setShowSignup] = useState(false); // toggle login/signup
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+  const [authToken, setAuthToken] = useState(localStorage.getItem("token"));
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [error, setError] = useState("");
+  const [showSignup, setShowSignup] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     try {
-      const response = await axios.post('/api/login', { email, password });
+      const response = await axios.post(`${BASE_URL}/api/login`, { email, password });
       const { token } = response.data;
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       setAuthToken(token);
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      setError(err.response?.data?.error || "Login failed. Please try again.");
     }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     try {
-      const response = await axios.post('/api/signup', {
+      const response = await axios.post(`${BASE_URL}/api/signup`, {
         name,
         email,
         password,
         phone,
         address,
-        userType: 'Admin',
-        preferredPaymentMethod: 'None'
+        userType: "Admin",
+        preferredPaymentMethod: "None",
       });
       const { token } = response.data;
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       setAuthToken(token);
     } catch (err) {
-      setError(err.response?.data?.error || 'Signup failed. Please try again.');
+      setError(err.response?.data?.error || "Signup failed. Please try again.");
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setAuthToken(null);
   };
 
   if (!authToken) {
     return (
       <div className="admin-login-container">
-        <h2>{showSignup ? 'Admin Sign Up' : 'Admin Login'}</h2>
+        <h2>{showSignup ? "Admin Sign Up" : "Admin Login"}</h2>
         <form onSubmit={showSignup ? handleSignup : handleLogin}>
           {showSignup && (
             <>
@@ -103,15 +106,12 @@ const Admin = () => {
             required
           />
           {error && <p className="error-msg">{error}</p>}
-          <button type="submit">{showSignup ? 'Sign Up' : 'Login'}</button>
+          <button type="submit">{showSignup ? "Sign Up" : "Login"}</button>
         </form>
         <div className="toggle-container">
-          <p>{showSignup ? 'Already have an account?' : "Don't have an account?"}</p>
-          <button
-            className="toggle-btn"
-            onClick={() => setShowSignup(!showSignup)}
-          >
-            {showSignup ? 'Go to Login' : 'Sign up here'}
+          <p>{showSignup ? "Already have an account?" : "Don't have an account?"}</p>
+          <button className="toggle-btn" onClick={() => setShowSignup(!showSignup)}>
+            {showSignup ? "Go to Login" : "Sign up here"}
           </button>
         </div>
       </div>
@@ -127,6 +127,7 @@ const Admin = () => {
         <Route path="discounts" element={<AdminDiscountList token={authToken} />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="transfer-admin" element={<TransferAdminPanel />} />
+        <Route path="content-editor" element={<ContentEditor token={authToken} />} />
       </Routes>
     </div>
   );

@@ -3,31 +3,33 @@ import './NewCollections.css';
 import ProductDisplay from '../ProductDisplay/ProductDisplay';
 import RelatedProducts from '../RelatedProducts/RelatedProducts';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const NewCollections = () => {
   const [newCollection, setNewCollection] = useState([]);
   const [error, setError] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:8070/items/newcollection')
-      .then((response) => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/items/newcollection`);
         if (!response.ok) {
-          throw new Error('Failed to fetch new collection');
+          const text = await response.text();
+          throw new Error(`HTTP error ${response.status}: ${text}`);
         }
-        return response.json();
-      })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setNewCollection(data);
-        } else {
+        const data = await response.json();
+        if (!Array.isArray(data)) {
           throw new Error('Fetched data is not an array');
         }
-      })
-      .catch((err) => {
-        console.error('Error fetching new collection:', err);
+        setNewCollection(data);
+      } catch (err) {
+        console.error('❌ Error:', err.message);
         setError(err.message);
-      });
-  }, []);
+      }
+    };
+    fetchData();
+  }, [API_BASE_URL]);
 
   const handleBackToList = () => {
     setSelectedProduct(null);

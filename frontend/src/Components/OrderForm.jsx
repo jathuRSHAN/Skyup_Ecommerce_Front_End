@@ -1,8 +1,9 @@
-// OrderForm.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './OrderForm.css';
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const OrderForm = () => {
   const location = useLocation();
@@ -75,7 +76,7 @@ const OrderForm = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        'http://localhost:8070/orders',
+        `${API_BASE_URL}/orders`,
         {
           order_items: orderItems,
           shippingAddress: address,

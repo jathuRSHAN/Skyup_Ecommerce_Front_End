@@ -5,6 +5,8 @@ import { ShopContext } from '../../Context/ShopContext';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode'; 
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Navbar = () => {
   const [menu, setMenu] = useState("shop");
   const { getTotalCartItems, saveCartBeforeLogout } = useContext(ShopContext);
@@ -13,7 +15,7 @@ const Navbar = () => {
 
   // Fetch Navbar content
   useEffect(() => {
-    axios.get('http://localhost:8070/content/Navbar')
+    axios.get(`${API_BASE_URL}/content/Navbar`)
       .then(res => setData(res.data.data || {}))
       .catch(err => console.error("Navbar content load error:", err));
   }, []);
@@ -64,7 +66,7 @@ const Navbar = () => {
   return (
     <div className="navbar">
       <div className="nav-logo">
-        <img src={data.logo ? `http://localhost:8070${data.logo}` : require('../Assets/logo.png')} alt="logo" />
+        <img src={data.logo ? `${API_BASE_URL}${data.logo}` : require('../Assets/logo.png')} alt="logo" />
         <p>{data.brandText || 'EliteCell'}</p>
       </div>
 
@@ -92,7 +94,7 @@ const Navbar = () => {
           <Link to="/login"><button>Login</button></Link>
         )}
         <Link to="/cart">
-          <img src={data.cart_icon ? `http://localhost:8070${data.cart_icon}` : require('../Assets/cart-icon.png')} alt="cart" />
+          <img src={data.cart_icon ? `${API_BASE_URL}${data.cart_icon}` : require('../Assets/cart-icon.png')} alt="cart" />
         </Link>
         <div className="nav-cart-count">{getTotalCartItems()}</div>
       </div>

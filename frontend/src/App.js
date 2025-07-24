@@ -21,6 +21,8 @@ import Cancel from './Components/Cancel';
 
 import ShopContextProvider, { ShopContext } from './Context/ShopContext';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 function AppRoutes() {
   const { userToken, customerId, cartItems } = useContext(ShopContext);
   const [categoryBanners, setCategoryBanners] = useState({
@@ -31,7 +33,7 @@ function AppRoutes() {
 
   useEffect(() => {
     axios
-      .get('http://localhost:8070/content/Categories')
+      .get(`${API_BASE_URL}/content/Categories`)
       .then((res) => {
         setCategoryBanners(res.data.data || {});
       })
@@ -47,7 +49,7 @@ function AppRoutes() {
         path='/gaming'
         element={
           <ShopCategory
-            banner={`http://localhost:8070${categoryBanners.gaming_banner || '/uploads/default_gaming.png'}`}
+            banner={`${API_BASE_URL}${categoryBanners.gaming_banner || '/uploads/default_gaming.png'}`}
             category="gaming"
           />
         }
@@ -56,7 +58,7 @@ function AppRoutes() {
         path='/phablet'
         element={
           <ShopCategory
-            banner={`http://localhost:8070${categoryBanners.phablet_banner || '/uploads/default_phablet.png'}`}
+            banner={`${API_BASE_URL}${categoryBanners.phablet_banner || '/uploads/default_phablet.png'}`}
             category="phablet"
           />
         }
@@ -65,7 +67,7 @@ function AppRoutes() {
         path='/budget'
         element={
           <ShopCategory
-            banner={`http://localhost:8070${categoryBanners.budget_banner || '/uploads/default_budget.png'}`}
+            banner={`${API_BASE_URL}${categoryBanners.budget_banner || '/uploads/default_budget.png'}`}
             category="budget"
           />
         }

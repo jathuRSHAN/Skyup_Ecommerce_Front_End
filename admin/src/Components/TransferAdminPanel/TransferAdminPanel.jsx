@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import Notification from '../Notification/Notification';
 
 const TransferAdminPanel = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const [users, setUsers] = useState([]);
   const [currentUserId, setCurrentUserId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
 
@@ -24,7 +24,7 @@ const TransferAdminPanel = () => {
         const payload = JSON.parse(atob(token.split('.')[1]));
         setCurrentUserId(payload.id);
 
-        const res = await fetch('/users', {
+        const res = await fetch(`${BASE_URL}/users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -45,11 +45,11 @@ const TransferAdminPanel = () => {
     };
 
     fetchUsers();
-  }, [token]);
+  }, [token, BASE_URL]);
 
   const handlePromoteToAdmin = async (userId) => {
     try {
-      const res = await fetch(`/api/transfer-admin/${userId}`, {
+      const res = await fetch(`${BASE_URL}/api/transfer-admin/${userId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -96,7 +96,6 @@ const TransferAdminPanel = () => {
         />
       )}
 
-      {/* Admin Users Table */}
       <h3>Admin Users</h3>
       <table border="1" cellPadding="8" style={{ width: '100%', marginBottom: '30px' }}>
         <thead>
@@ -123,7 +122,6 @@ const TransferAdminPanel = () => {
         </tbody>
       </table>
 
-      {/* Customer Users Table */}
       <h3>Customer Users</h3>
       <table border="1" cellPadding="8" style={{ width: '100%' }}>
         <thead>

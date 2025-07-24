@@ -13,8 +13,8 @@
     font-size: 48px;
     font-weight: 700;
     color: #1f2937;
-    text-align: center; /* Center the text */
-    margin: 0 0 20px 0; /* Add space below the heading */
+    text-align: center; 
+    margin: 0 0 20px 0; 
     text-transform: uppercase;
     letter-spacing: 2px;
 }

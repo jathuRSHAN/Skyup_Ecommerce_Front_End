@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import './DescriptionBox.css';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const DescriptionBox = () => {
   const [data, setData] = useState({});
 
   useEffect(() => {
-    axios.get('http://localhost:8070/content/DescriptionBox')
+    axios.get(`${API_BASE_URL}/content/DescriptionBox`)
       .then(res => setData(res.data.data || {}))
       .catch(err => console.error("Description content load error:", err));
   }, []);

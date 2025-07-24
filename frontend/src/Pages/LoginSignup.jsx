@@ -3,6 +3,8 @@ import axios from 'axios';
 import './CSS/LoginSignup.css';
 import Notification from '../Components/Notification/Notification';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const LoginSignup = () => {
   const [state, setState] = useState("Sign Up");
 
@@ -63,7 +65,7 @@ const LoginSignup = () => {
     if (state === "Change Password") {
       try {
         const token = localStorage.getItem('auth-token');
-        await axios.put('http://localhost:8070/users/change-password', passwordData, {
+        await axios.put(`${API_BASE_URL}/users/change-password`, passwordData, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         showNotification('Password changed successfully!', 'success');
@@ -79,8 +81,8 @@ const LoginSignup = () => {
 
       try {
         const url = state === "Login"
-          ? "http://localhost:8070/api/login"
-          : "http://localhost:8070/api/signup";
+          ? `${API_BASE_URL}/api/login`
+          : `${API_BASE_URL}/api/signup`;
 
         const payload = { ...formData };
 

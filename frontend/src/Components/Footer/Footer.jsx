@@ -2,17 +2,19 @@ import React, { useEffect, useState } from 'react';
 import './Footer.css';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Footer = () => {
   const [data, setData] = useState({});
 
   useEffect(() => {
-    axios.get('http://localhost:8070/content/Footer')
+    axios.get(`${API_BASE_URL}/content/Footer`)
       .then(res => setData(res.data.data || {}))
       .catch(err => console.error("Footer load error:", err));
   }, []);
 
   const getImg = (key, fallback) =>
-    data[key] ? `http://localhost:8070${data[key]}` : require(`../Assets/${fallback}`);
+    data[key] ? `${API_BASE_URL}${data[key]}` : require(`../Assets/${fallback}`);
 
   return (
     <div className='footer'>

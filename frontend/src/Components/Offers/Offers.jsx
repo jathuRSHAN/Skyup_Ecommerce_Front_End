@@ -3,11 +3,13 @@ import './Offers.css';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Offers = () => {
   const [data, setData] = useState({});
 
   useEffect(() => {
-    axios.get('http://localhost:8070/content/Offers')
+    axios.get(`${API_BASE_URL}/content/Offers`)
       .then(res => setData(res.data.data || {}))
       .catch(err => console.error("Offers content error:", err));
   }, []);
@@ -26,7 +28,7 @@ const Offers = () => {
 
       <div className="offers-right">
         <img
-          src={data.offer_img ? `http://localhost:8070${data.offer_img}` : require('../Assets/exclusive_image.jpg')}
+          src={data.offer_img ? `${API_BASE_URL}${data.offer_img}` : require('../Assets/exclusive_image.jpg')}
           alt="offer"
         />
       </div>

@@ -6,6 +6,8 @@ import axios from 'axios';
 import logo from '../Components/Assets/logo.png';
 import './Success.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Success = () => {
   const query = new URLSearchParams(useLocation().search);
   const orderId = query.get('order_id');
@@ -26,7 +28,7 @@ const Success = () => {
           return;
         }
 
-        const res = await axios.get('http://localhost:8070/orders/my-orders', {
+        const res = await axios.get(`${API_BASE_URL}/orders/my-orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 

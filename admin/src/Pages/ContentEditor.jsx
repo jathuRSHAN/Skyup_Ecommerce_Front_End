@@ -3,6 +3,8 @@ import axios from 'axios';
 import './ContentEditor.css';
 import Notification from '../Components/Notification/Notification'; 
 
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 const componentFields = {
   Hero: ['headline', 'subtext', 'subtext_img', 'line2', 'line3', 'buttonText', 'hero_img'],
   Navbar: ['logo', 'cart_icon', 'brandText'],
@@ -35,7 +37,7 @@ const ContentEditor = () => {
 
   const fetchComponentContent = async (component) => {
     try {
-      const res = await axios.get(`http://localhost:8070/content/${component}`);
+      const res = await axios.get(`${API_BASE_URL}/content/${component}`);
       setExistingData(res.data.data || {});
     } catch (error) {
       console.error('Fetch error:', error);
@@ -89,7 +91,7 @@ const ContentEditor = () => {
     }
 
     try {
-      await axios.post('http://localhost:8070/content', data, {
+      await axios.post(`${API_BASE_URL}/content`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -134,7 +136,7 @@ const ContentEditor = () => {
                   <div className="existing-preview">
                     {typeof existingData[field] === 'string' && existingData[field].startsWith('/uploads/')
                       ? <img
-                          src={`http://localhost:8070${existingData[field]}`}
+                          src={`${API_BASE_URL}${existingData[field]}`}
                           alt={field}
                           style={{ maxWidth: '150px', maxHeight: '100px', objectFit: 'contain' }}
                         />

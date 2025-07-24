@@ -5,6 +5,8 @@ import autoTable from 'jspdf-autotable';
 import './CustomerOrders.css';
 import logo from '../Components/Assets/logo.png'; 
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const CustomerOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +22,7 @@ const CustomerOrders = () => {
           return;
         }
 
-        const res = await axios.get('http://localhost:8070/orders/my-orders', {
+        const res = await axios.get(`${API_BASE_URL}/orders/my-orders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

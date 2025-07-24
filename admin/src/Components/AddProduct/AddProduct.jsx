@@ -4,6 +4,8 @@ import upload_area from '../../assets/upload_area.svg';
 import Notification from '../Notification/Notification';
 
 const AddProduct = () => {
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
   const [images, setImages] = useState([]);
   const [productDetails, setProductDetails] = useState({
     name: '',
@@ -19,7 +21,6 @@ const AddProduct = () => {
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
   };
 
-  // Allow adding images one by one or multiple at once, up to 4
   const imageHandler = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 4) {
@@ -30,7 +31,6 @@ const AddProduct = () => {
     e.target.value = '';
   };
 
-  // Remove an image by index
   const removeImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
@@ -62,7 +62,7 @@ const AddProduct = () => {
       formData.append('category', category);
       formData.append('stock', stock);
 
-      const response = await fetch('http://localhost:8070/items', {
+      const response = await fetch(`${BASE_URL}/items`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

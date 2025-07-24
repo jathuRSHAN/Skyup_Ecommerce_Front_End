@@ -7,6 +7,8 @@ import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import logo from '../../assets/logo.png';
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,7 @@ const AdminOrders = () => {
   useEffect(() => {
     const fetchAllOrders = async () => {
       try {
-        const res = await axios.get('http://localhost:8070/orders', {
+        const res = await axios.get(`${BASE_URL}/orders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setOrders(res.data);
@@ -41,7 +43,7 @@ const AdminOrders = () => {
 
   const handleCancel = async (orderId) => {
     try {
-      await axios.put(`http://localhost:8070/orders/cancel/${orderId}`, {}, {
+      await axios.put(`${BASE_URL}/orders/cancel/${orderId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotification({ message: 'Order cancelled.', type: 'success' });
@@ -56,7 +58,7 @@ const AdminOrders = () => {
 
   const handleStatusChange = async (orderId, status) => {
     try {
-      await axios.put(`http://localhost:8070/orders/${orderId}/status`, { status }, {
+      await axios.put(`${BASE_URL}/orders/${orderId}/status`, { status }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotification({ message: 'Status updated.', type: 'success' });
@@ -105,37 +107,24 @@ const AdminOrders = () => {
     let startY = 10 + imgHeight + 20;
 
     const user = order.customerId?.userId;
-    doc.text(`Order ID: ${order._id}`, margin + 4, startY);
-    startY += 8;
-
-    doc.text(`Customer Name: ${user?.name || 'N/A'}`, margin + 4, startY);
-    startY += 8;
-
-    doc.text(`Email: ${user?.email || 'N/A'}`, margin + 4, startY);
-    startY += 8;
-
-    doc.text(`Phone: ${user?.phone || 'N/A'}`, margin + 4, startY);
-    startY += 8;
-
-    doc.text(`Payment Status: ${order.paymentStatus}`, margin + 4, startY);
-    startY += 8;
-
-    doc.text(`Order Status: ${order.status}`, margin + 4, startY);
-    startY += 8;
+    doc.text(`Order ID: ${order._id}`, margin + 4, startY); startY += 8;
+    doc.text(`Customer Name: ${user?.name || 'N/A'}`, margin + 4, startY); startY += 8;
+    doc.text(`Email: ${user?.email || 'N/A'}`, margin + 4, startY); startY += 8;
+    doc.text(`Phone: ${user?.phone || 'N/A'}`, margin + 4, startY); startY += 8;
+    doc.text(`Payment Status: ${order.paymentStatus}`, margin + 4, startY); startY += 8;
+    doc.text(`Order Status: ${order.status}`, margin + 4, startY); startY += 8;
 
     const orderDate = new Date(order.createdAt).toLocaleString('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit', hour12: true,
     });
-    doc.text(`Order Date: ${orderDate}`, margin + 4, startY);
-    startY += 8;
+    doc.text(`Order Date: ${orderDate}`, margin + 4, startY); startY += 8;
 
     const shipping = order.shippingAddress;
     const shippingAddressText = shipping
       ? `${shipping.street}, ${shipping.city}, ${shipping.state} ${shipping.postalCode}`
       : 'N/A';
-    doc.text(`Shipping: ${shippingAddressText}`, margin + 4, startY);
-    startY += 10;
+    doc.text(`Shipping: ${shippingAddressText}`, margin + 4, startY); startY += 10;
 
     const tableColumn = ["Product", "Quantity", "Unit Price (Rs.)"];
     const tableRows = order.order_items?.map(item => [
@@ -156,18 +145,15 @@ const AdminOrders = () => {
     });
 
     const finalY = doc.lastAutoTable.finalY || startY + 40;
-
     doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
 
     let summaryY = finalY + 10;
     doc.text(`Subtotal: Rs. ${order.totalAmount?.toFixed(2)}`, pdfWidth - margin - 60, summaryY);
-
     if (order.discount && order.discount > 0) {
       summaryY += 8;
       doc.text(`Discount: -Rs. ${order.discount?.toFixed(2)}`, pdfWidth - margin - 60, summaryY);
     }
-
     summaryY += 8;
     doc.text(`Total: Rs. ${order.lastAmount?.toFixed(2)}`, pdfWidth - margin - 60, summaryY);
 

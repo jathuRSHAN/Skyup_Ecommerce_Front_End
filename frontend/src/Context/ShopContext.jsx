@@ -2,6 +2,8 @@ import React, { createContext, useState, useEffect } from 'react';
 
 export const ShopContext = createContext(null);
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const getDefaultCart = (products) => {
   const cart = {};
   products.forEach((product) => {
@@ -20,7 +22,7 @@ const ShopContextProvider = ({ children }) => {
       try {
         setLoading(true);
 
-        const res = await fetch('http://localhost:8070/items');
+        const res = await fetch(`${API_BASE_URL}/items`);
         const data = await res.json();
 
         const formattedData = data.map((product) => ({
@@ -32,7 +34,7 @@ const ShopContextProvider = ({ children }) => {
 
         const token = localStorage.getItem('auth-token');
         if (token) {
-          const cartRes = await fetch('http://localhost:8070/carts', {
+          const cartRes = await fetch(`${API_BASE_URL}/carts`, {
             method: 'GET',
             headers: {
               'auth-token': token,
@@ -71,7 +73,7 @@ const ShopContextProvider = ({ children }) => {
 
     const token = localStorage.getItem('auth-token');
     if (token) {
-      fetch('http://localhost:8070/carts', {
+      fetch(`${API_BASE_URL}/carts`, {
         method: 'POST',
         headers: {
           'auth-token': token,
@@ -95,7 +97,7 @@ const ShopContextProvider = ({ children }) => {
 
     const token = localStorage.getItem('auth-token');
     if (token) {
-      fetch(`http://localhost:8070/carts/${itemId}`, {
+      fetch(`${API_BASE_URL}/carts/${itemId}`, {
         method: 'DELETE',
         headers: {
           'auth-token': token,
@@ -115,7 +117,7 @@ const ShopContextProvider = ({ children }) => {
 
     const token = localStorage.getItem('auth-token');
     if (token) {
-      fetch(`http://localhost:8070/carts/${itemId}`, {
+      fetch(`${API_BASE_URL}/carts/${itemId}`, {
         method: 'PUT',
         headers: {
           'auth-token': token,
