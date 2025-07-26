@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './ContentEditor.css';
-import Notification from '../Components/Notification/Notification'; 
+import Notification from '../Components/Notification/Notification';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -11,7 +11,7 @@ const componentFields = {
   Footer: ['logo', 'brandText', 'whatsapp_icon', 'instagram_icon', 'facebook_icon', 'twitter_icon', 'copyright'],
   DescriptionBox: ['heading', 'description'],
   Offers: ['heading1', 'heading2', 'offerText', 'offer_img', 'buttonText'],
-  Categories: ['gaming_banner', 'phablet_banner', 'budget_banner'], 
+  Categories: ['gaming_banner', 'phablet_banner', 'budget_banner'],
 };
 
 const ContentEditor = () => {
@@ -38,6 +38,7 @@ const ContentEditor = () => {
   const fetchComponentContent = async (component) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/content/${component}`);
+      console.log(`Fetched content for ${component}:`, res.data.data); // Debug log
       setExistingData(res.data.data || {});
     } catch (error) {
       console.error('Fetch error:', error);
@@ -57,9 +58,7 @@ const ContentEditor = () => {
     let value = '';
 
     if (type === 'text') {
-      value = typeof existing === 'string' && !existing.startsWith('/uploads/')
-        ? existing
-        : '';
+      value = typeof existing === 'string' ? existing : '';
     }
 
     setFormData(prev => ({
@@ -132,18 +131,19 @@ const ContentEditor = () => {
               <div key={field} className="form-group">
                 <h4>{field}</h4>
 
-                {existingData[field] && (
-                  <div className="existing-preview">
-                    {typeof existingData[field] === 'string' && existingData[field].startsWith('/uploads/')
+                <div className="existing-preview">
+                  {existingData[field] ? (
+                    typeof existingData[field] === 'string' && existingData[field].startsWith('/uploads/')
                       ? <img
                           src={`${API_BASE_URL}${existingData[field]}`}
                           alt={field}
                           style={{ maxWidth: '150px', maxHeight: '100px', objectFit: 'contain' }}
                         />
                       : <p><strong>Current:</strong> {existingData[field]}</p>
-                    }
-                  </div>
-                )}
+                  ) : (
+                    <p><em>No current value</em></p>
+                  )}
+                </div>
 
                 <div className="field-type-options">
                   <label>
